@@ -1,0 +1,12 @@
+[package]
+name = "nua-lang"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "nua"
+path = "src/cli.rs"
+
+[dependencies]
+rlua = "0.19"
+clap = "4.0"
