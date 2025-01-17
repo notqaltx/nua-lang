@@ -1,1 +1,3 @@
-initialization
+initialization</br>
+cool programming language, that would be mostly wrote on lua and rust</br>
+trying to make it as fast as possible...
