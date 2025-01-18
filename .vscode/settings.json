@@ -1,5 +1,13 @@
 {
     "Lua.diagnostics.disable": [
-        "unused-local"
+        "unused-local",
+        "duplicate-set-field",
+        "missing-parameter",
+        "undefined-field",
+        "undefined-global",
+        "param-type-mismatch"
+    ],
+    "Lua.diagnostics.globals": [
+        "continue"
     ]
 }

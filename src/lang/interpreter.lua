@@ -1,4 +1,3 @@
--- src/lang/interpreter.lua
 local Interpreter = {}
 Interpreter.__index = Interpreter
 
