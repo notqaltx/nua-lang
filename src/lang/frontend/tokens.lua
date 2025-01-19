@@ -29,7 +29,6 @@ local TokenType = {
     ARROW = 'ARROW',
     EOF = 'EOF'
 }
-
 local DIGITS = '0123456789'
 local LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 local LETTERS_DIGITS = LETTERS..DIGITS
@@ -41,15 +40,12 @@ local KEYWORDS = {
     'do', 'func', 'end', 'return',
     'break', 'continue', 'print'
 }
-
--- Token class definition
 local Token = {}
 Token.__index = Token
 
 function Token:new(type_, value, pos_start, pos_end)
     local instance = {
-        type = type_,
-        value = value,
+        type = type_, value = value,
         pos_start = pos_start and pos_start:copy() or nil,
         pos_end = pos_end and pos_end:copy() or nil
     }
@@ -57,23 +53,24 @@ function Token:new(type_, value, pos_start, pos_end)
         instance.pos_end = pos_start:copy()
         instance.pos_end:advance()
     end
-    setmetatable(instance, Token)
+    setmetatable(instance, {
+        __tostring = function(t)
+            if t.value then
+                return string.format("%s:%s", t.type, t.value)
+            end
+            return t.type
+        end,
+        __call = function(self, _type, value)
+            return self.type == _type and self.value == value
+        end
+    })
     return instance
 end
-function Token:matches(type_, value)
-    return self.type == type_ and self.value == value
-end
-function Token:__tostring()
-    if self.value then
-        return string.format('%s:%s', self.type, self.value)
-    end
-    return self.type
-end
 return {
-    TokenType = TokenType,
     DIGITS = DIGITS,
     LETTERS = LETTERS,
     LETTERS_DIGITS = LETTERS_DIGITS,
     KEYWORDS = KEYWORDS,
+    TokenType = TokenType,
     Token = Token
 }

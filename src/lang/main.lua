@@ -1,5 +1,5 @@
-local compiler = require("src.lang.compiler")
-local Errors = require("src.lang.errors")
+local compiler = require("src.lang.backend.compiler")
+local Errors = require("src.lang.common.errors")
 
 -- Utility function for colored output
 local function colored_print(color_code, message)
@@ -35,7 +35,7 @@ local function execute_file(filename)
         content = read_file(filename)
     end)
     if not ok then
-        colored_print(colors.red, "Error: " .. tostring(err)) -- Convert err to string
+        colored_print(colors.red, tostring(err)) -- Convert err to string
         return
     end
 
@@ -46,7 +46,7 @@ local function execute_file(filename)
         if type(err) == "table" and err.as_string then
             colored_print(colors.red, err:as_string())
         else
-            colored_print(colors.red, "Error: " .. tostring(err))
+            colored_print(colors.red, tostring(err))
         end
     else
         colored_print(colors.green, "Script executed successfully.")

@@ -1,5 +1,5 @@
-local Errors = require("src.lang.errors")
-local Tokens = require("src.lang.tokens")
+local Errors = require("src.lang.common.errors")
+local Tokens = require("src.lang.frontend.tokens")
 
 local TokenType = Tokens.TokenType
 local Token = Tokens.Token
@@ -29,7 +29,8 @@ function Parser:consume(expected_type, error_message)
     if token and token.type == expected_type then
         self:advance() return token
     else
-        error(Errors.InvalidSyntaxError:new(token.pos, token.pos, error_message))
+        print(token.pos_start, token.pos_end)
+        error(Errors.InvalidSyntaxError:new(token.pos_start, token.pos_end, error_message))
     end
 end
 function Parser:parse()
@@ -46,6 +47,7 @@ function Parser:parse_statement()
             return self:parse_print_statement()
         end
     else
+        print(token.pos_start, token.pos_end)
         error(Errors.InvalidSyntaxError:new(token.pos_start, token.pos_end, "Unknown statement"))
     end
 end

@@ -5,9 +5,12 @@
         "missing-parameter",
         "undefined-field",
         "undefined-global",
-        "param-type-mismatch"
+        "param-type-mismatch",
+        "missing-return"
     ],
     "Lua.diagnostics.globals": [
-        "continue"
+        "continue",
+        "range",
+        "rfind"
     ]
 }
