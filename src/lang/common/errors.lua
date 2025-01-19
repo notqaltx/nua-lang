@@ -1,4 +1,4 @@
-local Strings = require("src.lang.common.strings")
+local Strings = require("src.lang.common.utils.strings")
 local Errors, Error = {}, {}
 
 function Error:new(start, _end, error, details)
@@ -20,8 +20,6 @@ function Error:new(start, _end, error, details)
         }
     )
 end
-Errors.Error = Error
-
 local IllegalCharError = setmetatable({}, { __index = Error })
 function IllegalCharError:new(start, _end, details)
     return Error:new(start, _end, "Illegal Character", details)
@@ -70,9 +68,9 @@ end
 Errors.RTError = RTError
 
 return setmetatable(Errors, {
-    __call = function(_, subclass_name, start, _end, details)
+    __call = function(_, subclass_name, start, _end, details, context)
         local subclass = Errors[tostring(subclass_name)]
-        if subclass then return subclass:new(start, _end, details)
+        if subclass then return subclass:new(start, _end, details, context)
         else error("Invalid error subclass: "..tostring(subclass_name)) end
     end
 })

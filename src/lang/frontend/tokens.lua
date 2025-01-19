@@ -26,7 +26,9 @@ local TokenType = {
     LTE = 'LTE',
     GTE = 'GTE',
     PIPE = 'PIPE',
+    GETS = 'GETS',
     ARROW = 'ARROW',
+    NEWLINE = 'NEWLINE',
     EOF = 'EOF'
 }
 local DIGITS = '0123456789'
@@ -45,14 +47,15 @@ Token.__index = Token
 
 function Token:new(type_, value, pos_start, pos_end)
     local instance = {
-        type = type_, value = value,
+        type = type_, value = value and value or nil,
         pos_start = pos_start and pos_start:copy() or nil,
-        pos_end = pos_end and pos_end:copy() or nil
+        pos_end = nil
     }
-    if pos_start then
+    if pos_start and pos_end == nil then
         instance.pos_end = pos_start:copy()
         instance.pos_end:advance()
     end
+    if pos_end then instance.pos_end = pos_end:copy() end
     setmetatable(instance, {
         __tostring = function(t)
             if t.value then

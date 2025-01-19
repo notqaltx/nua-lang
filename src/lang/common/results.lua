@@ -94,7 +94,7 @@ function RT:new()
     }
     setmetatable(instance, {__index = function(t, key)
         return rt_methods[key] or rawget(t, key)
-    end}); self:reset()
+    end}); instance:reset()
     return instance
 end
 Results.RT = RT
@@ -103,6 +103,6 @@ return setmetatable(Results, {
     __call = function(_, subclass_name)
         local subclass = Results[tostring(subclass_name)]
         if subclass then return subclass:new()
-        else error("Invalid error subclass: "..tostring(subclass_name)) end
+        else error("Invalid result subclass: "..tostring(subclass_name)) end
     end
 })
