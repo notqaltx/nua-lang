@@ -128,10 +128,12 @@ local lexer_methods = {
                 and TokenType.GETS or TokenType.LT)
             self:add_token(new_token, self.pos)
         elseif self.current_char == ">" then
-            local new_token = self:char_match("=") and TokenType.GTE or TokenType.GT
+            local new_token = self:char_match("=")
+                and TokenType.GTE or TokenType.GT
             self:add_token(new_token, self.pos)
         elseif self.current_char == "-" then
-            local new_token = self:char_match(">") and TokenType.ARROW or TokenType.MINUS
+            local new_token = self:char_match(">")
+                and TokenType.ARROW or TokenType.MINUS
             self:add_token(new_token, self.pos)
         elseif self.current_char == "/" then
             if self:char_match("/") then
@@ -140,9 +142,13 @@ local lexer_methods = {
                     self:advance()
                 end
             else self:add_token(TokenType.DIV, self.pos) end
+        elseif self.current_char == "&" then
+            if self:char_match("&") then self.add_token(TokenType.AND, self.pos)
+            else return nil, string.format("Expected '&' at line %d", self.pos.ln) end
         elseif self.current_char == "|" then
             if self:char_match(">") then self:add_token(TokenType.PIPE, self.pos)
-            else return nil, string.format("Expected '>' at line %d", self.pos.ln) end
+            elseif self:char_match("|") then self:add_token(TokenType.OR, self.pos)
+            else return nil, string.format("Expected '|' or '>' at line %d", self.pos.ln) end
         elseif (self.current_char == "" or self.current_char == " ")
         or (self.current_char == "\r" or self.current_char == "\t") then
             self:advance() -- Ignore whitespace
