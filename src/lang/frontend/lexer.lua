@@ -52,7 +52,7 @@ local lexer_methods = {
             escape_character = false
         end
         if self:is_at_end() then
-            return nil, Errors.IllegalCharError:new(start, self.pos:copy(), "Unterminated string")
+            return nil, Errors:IllegalCharError(start, self.pos:copy(), "Unterminated string")
         end
         self:advance(); print(str)
         return self:token(TokenType.STRING, str, start), nil
@@ -111,6 +111,7 @@ local lexer_methods = {
         elseif self.current_char == "," then self:add_token(TokenType.COMMA, self.pos)
         elseif self.current_char == "." then self:add_token(TokenType.DOT, self.pos)
         elseif self.current_char == "+" then self:add_token(TokenType.PLUS, self.pos)
+        elseif self.current_char == "^" then self:add_token(TokenType.POW, self.pos)
         elseif self.current_char == ":" then self:add_token(TokenType.COLON, self.pos)
         elseif self.current_char == ";" then self:add_token(TokenType.SEMICOLON, self.pos)
         elseif self.current_char == "*" then self:add_token(TokenType.MUL, self.pos)
