@@ -1,63 +1,70 @@
 local Nodes = {}
-
-local Number = {}
-function Number:new(token)
+local function create_node(name, constructor)
+    local class = setmetatable({ __name = name }, {})
+    class.__index = class
+    class.new = constructor or function(_, ...)
+        return setmetatable({}, class)
+    end
+    setmetatable(class, {__index = function(_, key)
+        if key == "__name" then return name end
+    end}); Nodes[name] = class
+    return class
+end
+local Number = create_node("NumberNode", function(_, token)
     return setmetatable({
         token = token,
         pos_start = token.pos_start,
         pos_end = token.pos_end
     }, {
+        __index = Number,
         __tostring = function(t)
             return tostring(t.token)
         end
     })
-end
-local String = {}
-function String:new(token)
+end)
+local String = create_node("StringNode", function(_, token)
     return setmetatable({
         token = token,
         pos_start = token.pos_start,
         pos_end = token.pos_end
     }, {
+        __index = String,
         __tostring = function(t)
             return tostring(t.token)
         end
     })
-end
-local List = {}
-function List:new(elements, start, _end)
+end)
+local List = create_node("ListNode", function(_, elements, pos_start, pos_end)
     return setmetatable({
         element_nodes = elements,
-        pos_start = start, pos_end = _end
-    }, {})
-end
-local VarAccess = {}
-function VarAccess:new(var_name_token)
+        pos_start = pos_start,
+        pos_end = pos_end
+    }, { __index = List })
+end)
+local VarAccess = create_node("VarAccessNode", function(_, var_name_token)
     return setmetatable({
         var_name_token = var_name_token,
         pos_start = var_name_token.pos_start,
         pos_end = var_name_token.pos_end
-    }, {})
-end
-local VarAssign = {}
-function VarAssign:new(var_name_token, value_node)
+    }, { __index = VarAccess })
+end)
+local VarAssign = create_node("VarAssignNode", function(_, var_name_token, value_node)
     return setmetatable({
         var_name_token = var_name_token,
         value_node = value_node,
         pos_start = var_name_token.pos_start,
         pos_end = value_node.pos_end
-    }, {})
-end
-local BinOp = {}
-function BinOp:new(left, op_token, right)
+    }, { __index = VarAssign })
+end)
+local BinOp = create_node("BinOpNode", function(_, left, op_token, right)
     return setmetatable({
         left_node = left,
         op_token = op_token,
         right_node = right,
-
         pos_start = left.pos_start,
         pos_end = right.pos_end
     }, {
+        __index = BinOp,
         __tostring = function(t)
             return string.format(
                 "(%s, %s, %s)", t.left_node,
@@ -65,23 +72,25 @@ function BinOp:new(left, op_token, right)
             )
         end
     })
-end
-local UnaryOp = {}
-function UnaryOp:new(op_token, node)
+end)
+local UnaryOp = create_node("UnaryOpNode", function(_, op_token, node)
     return setmetatable({
-        op_token = op_token, node = node,
+        op_token = op_token,
+        node = node,
         pos_start = op_token.pos_start,
         pos_end = node.pos_end
     }, {
+        __index = UnaryOp,
         __tostring = function(t)
             return string.format("(%s, %s)", t.op_token, t.node)
         end
     })
-end
+end)
 return setmetatable(Nodes, {
-    __call = function(_, subclass_name)
+    __call = function(_, subclass_name, ...)
         local subclass = Nodes[tostring(subclass_name)]
-        if subclass then return subclass:new()
+        if subclass and subclass.new then return subclass:new(...)
+        elseif subclass then return subclass
         else error("Invalid node subclass: "..tostring(subclass_name)) end
     end
 })

@@ -99,9 +99,9 @@ function SymbolTable:new()
 end
 
 return setmetatable(Values, {
-    __call = function(_, subclass_name)
+    __call = function(_, subclass_name, ...)
         local subclass = Values[tostring(subclass_name)]
-        if subclass then return subclass:new()
+        if subclass then return subclass:new(...)
         else error("Invalid value subclass: "..tostring(subclass_name)) end
     end
 })

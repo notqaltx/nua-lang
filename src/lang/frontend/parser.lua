@@ -112,11 +112,11 @@ local parse_methods = {
         local token = self.current_token
         if token == (TokenType.INT or TokenType.FLOAT) then
             res:register_advancement(); self:advance()
-            return res:success(Nodes:Number(token))
+            return res:success(Nodes("NumberNode", token))
 
         elseif token == TokenType.KEYWORD then
             res:register_advancement(); self:advance()
-            return res.success(Nodes:VarAccess(token))
+            return res.success(Nodes("VarAccessNode", token))
 
         elseif token == TokenType.LPAREN then
             res:register_advancement(); self:advance()
@@ -147,7 +147,7 @@ local parse_methods = {
             res:register_advancement(); self:advance()
             local factor = res:register(self:factor())
             if res.error then return res end
-            return res:success(Nodes:UnaryOp(token, factor))
+            return res:success(Nodes("UnaryOpNode", token, factor))
         end
         return self:power()
     end,
@@ -176,7 +176,7 @@ local parse_methods = {
             res:register_advancement(); self:advance()
             local expr = res:register(self:expr())
             if res.error then return res end
-            return res:success(Nodes:VarAssign(var_name, expr))
+            return res:success(Nodes("VarAssignNode", var_name, expr))
         end
         local node = res:register(self:bin_op(self.term, {TokenType.PLUS, TokenType.MINUS}))
         if res.error then
@@ -199,7 +199,7 @@ local parse_methods = {
 
             local right = res:register(b())
             if res.error then return res end
-            left = Nodes:BinOp(left, op_token, right)
+            left = Nodes("BinOpNode", left, op_token, right)
         end
         return res:success(left)
     end,

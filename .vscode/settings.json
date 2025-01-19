@@ -6,7 +6,8 @@
         "undefined-field",
         "undefined-global",
         "param-type-mismatch",
-        "missing-return"
+        "missing-return",
+        "need-check-nil"
     ],
     "Lua.diagnostics.globals": [
         "continue",
