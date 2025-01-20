@@ -1,2 +1,1 @@
-print!("Calling from line: 1");
-print!("Calling from line: 2");
+var a = 1

@@ -4,7 +4,7 @@ Position.__index = Position
 function Position:new(index, line, column, filename, filetext)
     local instance = {
         idx = index or 0, ln = line or 0,
-        column = column or 0, start = nil,
+        column = column or 0, start = 0,
         fn = filename, ft = filetext
     }
     setmetatable(instance, Position)

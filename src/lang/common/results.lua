@@ -3,14 +3,12 @@ local Parse, RT = {}, {}
 
 local parse_methods = {
     register_advancement = function(self)
-        local last = self.last_registered_advance
-        local count = self.advance_count
-        last = last + 1; count = count + 1
+        self.last_registered_advance = self.last_registered_advance + 1
+        self.advance_count = self.advance_count + 1
     end,
     register = function(self, res)
-        local count = self.advance_count
-        self.last_registered_advance = count
-        count = count + res.advance_count
+        self.last_registered_advance = self.advance_count
+        self.advance_count = self.advance_count + res.advance_count
         if res.error then self.error = res.error end
         return res.node
     end,

@@ -39,7 +39,7 @@ local LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 local LETTERS_DIGITS = LETTERS..DIGITS
 
 local KEYWORDS = {
-    'let', 'and', 'or', 'not',
+    'var', 'and', 'or', 'not',
     'if', 'then', 'elif', 'else',
     'for', 'to', 'step', 'while',
     'do', 'func', 'end', 'return',

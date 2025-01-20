@@ -17,7 +17,7 @@ local interpret_methods = {
     end,
     visit_NumberNode = function(self, node, context)
         return Results:RT():success(
-            Values:Number(node.token.value)
+            Values("Number", node.token.value)
                 :set_context(context)
                 :set_pos(node.pos_start, node.pos_end)
         )
@@ -63,7 +63,7 @@ local interpret_methods = {
         local number = res:register(self:visit(node.node, context))
         if res.error then return res end
         if node.op_token.type == TokenType.MINUS then
-            number, error = number:multed(Values:Number(-1))
+            number, error = number:multed(Values("Number", -1))
         end
         if error then return res:failure(error)
         else return res:success(number:set_pos(node.pos_start, node.pos_end)) end
@@ -74,3 +74,4 @@ function Interpreter:new()
         return interpret_methods[key] or rawget(t, key)
     end})
 end
+return Interpreter

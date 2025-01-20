@@ -32,7 +32,7 @@ local lexer_methods = {
     add_token = function(self, ...)
         local tbl = table.pack(...)
         self:token(tbl[1], nil, tbl[2], tbl[3])
-        return self:advance()
+        self:advance()
     end,
     make_string = function(self)
         local str, start = "", self.pos:copy()
@@ -71,12 +71,13 @@ local lexer_methods = {
             self:advance()
         end
         local tonum = tonumber(num_str)
-        if dot_count == 0 then return self:token(TokenType.FLOAT, tonum, start), nil
-        else return self:token(TokenType.INT, tonum, start), nil end
+        if dot_count == 0 then return self:token(TokenType.INT, tonum, start), nil
+        else return self:token(TokenType.FLOAT, tonum, start), nil end
     end,
     make_identifier = function(self)
         local id_str, start = "", self.pos:copy()
         local new_tokens = Tokens.LETTERS_DIGITS
+        -- TODO: add here error handling
         -- if not new_tokens then return end
 
         while self.current_char ~= nil and
@@ -143,10 +144,10 @@ local lexer_methods = {
                     self:advance()
                 end
             else self:add_token(TokenType.DIV, self.pos) end
-        elseif self.current_char == "&" then
+        elseif self.current_char == "&" then self:advance()
             if self:char_match("&") then self.add_token(TokenType.AND, self.pos)
             else return nil, string.format("Expected '&' at line %d", self.pos.ln) end
-        elseif self.current_char == "|" then
+        elseif self.current_char == "|" then self:advance()
             if self:char_match(">") then self:add_token(TokenType.PIPE, self.pos)
             elseif self:char_match("|") then self:add_token(TokenType.OR, self.pos)
             else return nil, string.format("Expected '|' or '>' at line %d", self.pos.ln) end

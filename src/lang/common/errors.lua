@@ -10,7 +10,7 @@ function Error:new(start, _end, error, details)
                 local result = Strings.colored("red", string.format("%s: %s\n", t.error_name, t.details))
                 result = result..string.format("    --> File %s, line: %d\n", t.pos_start.fn, t.pos_start.ln + 1)
                 
-                local source_lines = Strings.split(t.pos_start.ft, "\n")
+                local source_lines = Strings.split(t.pos_start.ft or "", "\n")
                 local error_line = source_lines[t.pos_start.ln + 1]
                 result = result..error_line.."\n"
 
@@ -69,6 +69,7 @@ Errors.RTError = RTError
 
 return setmetatable(Errors, {
     __call = function(_, subclass_name, start, _end, details, context)
+        print("Calling Errors with subclass_name:", tostring(subclass_name))
         local subclass = Errors[tostring(subclass_name)]
         if subclass then return subclass:new(start, _end, details, context)
         else error("Invalid error subclass: "..tostring(subclass_name)) end

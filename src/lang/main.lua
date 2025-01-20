@@ -29,13 +29,12 @@ local function execute_file(filename)
     if not filename:match("%.nua$") then
         filename = filename .. ".nua"
     end
-
     local content
     local ok, err = pcall(function()
         content = read_file(filename)
     end)
     if not ok then
-        colored_print(colors.red, tostring(err)) -- Convert err to string
+        colored_print(colors.red, tostring(err))
         return
     end
 
