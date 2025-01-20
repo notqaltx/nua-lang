@@ -116,28 +116,28 @@ local lexer_methods = {
         elseif self.current_char == ":" then self:add_token(TokenType.COLON, self.pos)
         elseif self.current_char == ";" then self:add_token(TokenType.SEMICOLON, self.pos)
         elseif self.current_char == "*" then self:add_token(TokenType.MUL, self.pos)
-        elseif self.current_char == "!" then
+        elseif self.current_char == "!" then self:advance()
             local new_token = self:char_match("=")
                 and TokenType.NE or TokenType.BANG
             self:add_token(new_token, self.pos)
-        elseif self.current_char == "=" then
+        elseif self.current_char == "=" then self:advance()
             local new_token = self:char_match("=")
                 and TokenType.EE or TokenType.EQ
             self:add_token(new_token, self.pos)
-        elseif self.current_char == "<" then
+        elseif self.current_char == "<" then self:advance()
             local new_token = self:char_match("=")
                 and TokenType.LTE or (self:char_match("-")
                 and TokenType.GETS or TokenType.LT)
             self:add_token(new_token, self.pos)
-        elseif self.current_char == ">" then
+        elseif self.current_char == ">" then self:advance()
             local new_token = self:char_match("=")
                 and TokenType.GTE or TokenType.GT
             self:add_token(new_token, self.pos)
-        elseif self.current_char == "-" then
+        elseif self.current_char == "-" then self:advance()
             local new_token = self:char_match(">")
                 and TokenType.ARROW or TokenType.MINUS
             self:add_token(new_token, self.pos)
-        elseif self.current_char == "/" then
+        elseif self.current_char == "/" then self:advance()
             if self:char_match("/") then
                 while self:peek() ~= "\n"
                 and not self:is_at_end() do

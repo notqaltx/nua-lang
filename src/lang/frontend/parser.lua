@@ -107,7 +107,7 @@ local parse_methods = {
             local var_name = self.current_token
             res:register_advancement(); self:advance()
 
-            if self.current_token.type ~= TokenType.EE then
+            if self.current_token.type ~= TokenType.EQ then
                 return res:failure(Errors("InvalidSyntaxError",
                     self.current_token.pos_start, self.current_token.pos_end,
                     "Expected \"=\" after variable identifier."
