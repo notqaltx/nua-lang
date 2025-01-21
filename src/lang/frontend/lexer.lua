@@ -31,8 +31,62 @@ local lexer_methods = {
     end,
     add_token = function(self, ...)
         local tbl = table.pack(...)
+        tbl[2] = tbl[2] or self.pos; tbl[3] = tbl[3] or nil
         self:token(tbl[1], nil, tbl[2], tbl[3])
+        return self:advance()
+    end,
+    make_not_equals = function(self)
+        local start = self.pos:copy(); self:advance()
+        if self.current_char == "=" then self:advance()
+            return self:add_token(TokenType.NE, start, self.pos), nil
+        end
         self:advance()
+        return nil, Errors(
+            "ExpectedCharError", start, 
+            self.pos, "\"=\" (after \"!\")")
+    end,
+    make_equals = function(self)
+        local token_type = TokenType.EQ
+        local start = self.pos:copy(); self:advance()
+        
+        if self.current_char == "=" then self:advance(); token_type = TokenType.EE
+        end return self:add_token(token_type, start, self.pos)
+    end,
+    make_less_than = function(self)
+        local token_type = TokenType.LT
+        local start = self.pos:copy(); self:advance()
+        
+        if self.current_char == "=" then self:advance(); token_type = TokenType.LTE
+        end return self:add_token(token_type, start, self.pos)
+    end,
+    make_greater_than = function(self)
+        local token_type = TokenType.GT
+        local start = self.pos:copy(); self:advance()
+        
+        if self.current_char == "=" then self:advance(); token_type = TokenType.GTE
+        end return self:add_token(token_type, start, self.pos)
+    end,
+    make_minus = function(self)
+        local token_type = TokenType.MINUS
+        local start = self.pos:copy(); self:advance()
+
+        if self.current_char == ">" then self:advance(); token_type = TokenType.ARROW
+        end return self:add_token(token_type, start, self.pos)
+    end,
+    make_ampersand = function(self)
+        local token_type = TokenType.AMPERSAND
+        local start = self.pos:copy(); self:advance()
+
+        if self.current_char == "&" then self:advance(); token_type = TokenType.AND
+        end return self:add_token(token_type, start, self.pos)
+    end,
+    make_pipe = function(self)
+        local token_type = TokenType.PIPE
+        local start = self.pos:copy(); self:advance()
+
+        if self.current_char == "|" then self:advance(); token_type = TokenType.OR
+        elseif self.current_char == ">" then self:advance(); token_type = TokenType.PGT
+        end return self:add_token(token_type, start, self.pos)
     end,
     make_string = function(self)
         local str, start = "", self.pos:copy()
@@ -116,43 +170,25 @@ local lexer_methods = {
         elseif self.current_char == ":" then self:add_token(TokenType.COLON, self.pos)
         elseif self.current_char == ";" then self:add_token(TokenType.SEMICOLON, self.pos)
         elseif self.current_char == "*" then self:add_token(TokenType.MUL, self.pos)
-        elseif self.current_char == "!" then self:advance()
-            local new_token = self:char_match("=")
-                and TokenType.NE or TokenType.BANG
-            self:add_token(new_token, self.pos)
-        elseif self.current_char == "=" then self:advance()
-            local new_token = self:char_match("=")
-                and TokenType.EE or TokenType.EQ
-            self:add_token(new_token, self.pos)
-        elseif self.current_char == "<" then self:advance()
-            local new_token = self:char_match("=")
-                and TokenType.LTE or (self:char_match("-")
-                and TokenType.GETS or TokenType.LT)
-            self:add_token(new_token, self.pos)
-        elseif self.current_char == ">" then self:advance()
-            local new_token = self:char_match("=")
-                and TokenType.GTE or TokenType.GT
-            self:add_token(new_token, self.pos)
-        elseif self.current_char == "-" then self:advance()
-            local new_token = self:char_match(">")
-                and TokenType.ARROW or TokenType.MINUS
-            self:add_token(new_token, self.pos)
-        elseif self.current_char == "/" then self:advance()
+        elseif self.current_char == "=" then self:make_equals()
+        elseif self.current_char == "<" then self:make_less_than()
+        elseif self.current_char == ">" then self:make_greater_than()
+        elseif self.current_char == "-" then self:make_minus()
+        elseif self.current_char == "&" then self:make_ampersand()
+        elseif self.current_char == "|" then self:make_pipe()
+        elseif self.current_char == "!" then
+            local token, error = self:make_not_equals()
+            if error then return {}, error end
+        elseif self.current_char == "/" then
+            self:advance()
             if self:char_match("/") then
                 while self:peek() ~= "\n"
                 and not self:is_at_end() do
                     self:advance()
                 end
             else self:add_token(TokenType.DIV, self.pos) end
-        elseif self.current_char == "&" then self:advance()
-            if self:char_match("&") then self.add_token(TokenType.AND, self.pos)
-            else return nil, string.format("Expected '&' at line %d", self.pos.ln) end
-        elseif self.current_char == "|" then self:advance()
-            if self:char_match(">") then self:add_token(TokenType.PIPE, self.pos)
-            elseif self:char_match("|") then self:add_token(TokenType.OR, self.pos)
-            else return nil, string.format("Expected '|' or '>' at line %d", self.pos.ln) end
         elseif (self.current_char == "" or self.current_char == " ")
-        or (self.current_char == "\r" or self.current_char == "\t") then
+        or (self.current_char == "\r" or self.current_char == " \t") then
             self:advance() -- Ignore whitespace
         elseif self.current_char == "//" then
             self:skip_comment() -- Skip Comment
@@ -170,26 +206,31 @@ local lexer_methods = {
             elseif self:is_alpha(self.current_char) then
                 self:make_identifier()
             else
-                return nil, string.format("Unrecognized char at line %d: %s", self.pos.ln, self.current_char)
+                local pos_start = self.pos:copy()
+                local char = self.current_char; self:advance()
+                return {}, Errors(
+                    "IllegalCharError", pos_start, self.pos,
+                    string.format("\"%s\"", char))
             end
         end
         return true
     end,
     tokenize = function(self)
-        while self.current_char do
+        while self.current_char ~= nil do
             self.pos.start = self.pos.idx
             local success, err = self:scan_token()
-            if not success then return nil, err end
+            if not success then return {}, err end
         end
-        self:add_token(TokenType.EOF, self.pos)
-        return self.tokens
+        self:token(TokenType.EOF, nil, self.pos)
+        return self.tokens, nil
     end,
 }
 function Lexer:new(fn, source)
     local instance = {
         source = source, tokens = {},
         pos = Position:new(-1, 0, -1, fn, source),
-        current_char = source:sub(1, 1)
+        -- current_char = source:sub(1, 1)
+        current_char = nil
     }
     setmetatable(instance, {__index = function(t, key)
         return lexer_methods[key] or rawget(t, key)

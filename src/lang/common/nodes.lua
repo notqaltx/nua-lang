@@ -12,7 +12,7 @@ local function create_node(name, constructor)
 end
 local Number = create_node("NumberNode", function(_, token)
     return setmetatable({
-        token = token,
+        __name = "NumberNode", token = token,
         pos_start = token.pos_start,
         pos_end = token.pos_end
     }, {
@@ -24,7 +24,7 @@ local Number = create_node("NumberNode", function(_, token)
 end)
 local String = create_node("StringNode", function(_, token)
     return setmetatable({
-        token = token,
+        __name = "StringNode", token = token,
         pos_start = token.pos_start,
         pos_end = token.pos_end
     }, {
@@ -36,6 +36,7 @@ local String = create_node("StringNode", function(_, token)
 end)
 local List = create_node("ListNode", function(_, elements, pos_start, pos_end)
     return setmetatable({
+        __name = "ListNode",
         element_nodes = elements,
         pos_start = pos_start,
         pos_end = pos_end
@@ -43,6 +44,7 @@ local List = create_node("ListNode", function(_, elements, pos_start, pos_end)
 end)
 local VarAccess = create_node("VarAccessNode", function(_, var_name_token)
     return setmetatable({
+        __name = "VarAccessNode",
         var_name_token = var_name_token,
         pos_start = var_name_token.pos_start,
         pos_end = var_name_token.pos_end
@@ -50,6 +52,7 @@ local VarAccess = create_node("VarAccessNode", function(_, var_name_token)
 end)
 local VarAssign = create_node("VarAssignNode", function(_, var_name_token, value_node)
     return setmetatable({
+        __name = "VarAssignNode",
         var_name_token = var_name_token,
         value_node = value_node,
         pos_start = var_name_token.pos_start,
@@ -58,6 +61,7 @@ local VarAssign = create_node("VarAssignNode", function(_, var_name_token, value
 end)
 local BinOp = create_node("BinOpNode", function(_, left, op_token, right)
     return setmetatable({
+        __name = "BinOpNode",
         left_node = left,
         op_token = op_token,
         right_node = right,
@@ -75,6 +79,7 @@ local BinOp = create_node("BinOpNode", function(_, left, op_token, right)
 end)
 local UnaryOp = create_node("UnaryOpNode", function(_, op_token, node)
     return setmetatable({
+        __name = "UnaryOpNode",
         op_token = op_token,
         node = node,
         pos_start = op_token.pos_start,

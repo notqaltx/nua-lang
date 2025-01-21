@@ -70,6 +70,7 @@ function Number:new(value)
     instance:set_pos(); instance:set_context()
     return instance
 end
+Values.Number = Number
 
 local Context = {}
 function Context:new(display_name, parent, parent_entry_pos)
@@ -78,6 +79,7 @@ function Context:new(display_name, parent, parent_entry_pos)
         parent_entry_pos = parent_entry_pos, symbol_table = nil
     }, {})
 end
+Values.Context = Context
 
 local SymbolTable = {}
 local symbol_methods = {
@@ -92,11 +94,12 @@ local symbol_methods = {
     remove = function(self, name) self.symbols[name] = nil end,
 }
 function SymbolTable:new()
-    setmetatable({symbols = {}, parent = nil},
+    return setmetatable({symbols = {}, parent = nil},
     {__index = function(t, key)
         return symbol_methods[key] or rawget(t, key)
     end})
 end
+Values.SymbolTable = SymbolTable
 
 return setmetatable(Values, {
     __call = function(_, subclass_name, ...)

@@ -1,4 +1,4 @@
-local compiler = require("src.lang.backend.compiler")
+local Compiler = require("src.lang.backend.compiler")
 local Errors = require("src.lang.common.errors")
 
 -- Utility function for colored output
@@ -37,17 +37,16 @@ local function execute_file(filename)
         colored_print(colors.red, tostring(err))
         return
     end
-
-    ok, err = pcall(function()
-        compiler:run(filename, content)
-    end)
-    if not ok then
+    local compiler = Compiler:new()
+    local result, error = compiler:run(filename, content)
+    if error then
         if type(err) == "table" and err.as_string then
             colored_print(colors.red, err:as_string())
         else
             colored_print(colors.red, tostring(err))
         end
     else
+        print(result)
         colored_print(colors.green, "Script executed successfully.")
     end
 end

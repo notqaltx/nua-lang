@@ -1,5 +1,4 @@
 local TokenType = {
-    -- Define all token types here
     INT = 'INT',
     FLOAT = 'FLOAT',
     STRING = 'STRING',
@@ -29,6 +28,7 @@ local TokenType = {
     LTE = 'LTE',
     GTE = 'GTE',
     PIPE = 'PIPE',
+    PGT = 'PGT',
     GETS = 'GETS',
     ARROW = 'ARROW',
     NEWLINE = 'NEWLINE',
