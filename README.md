@@ -19,7 +19,5 @@ trying to make it as fast as possible... -->
     <p>Nua is a programming language, built just for fun with simplicity.</p>
     <h2>License</h2>
     <p>This project is licensed under the <a href="LICENSE">MIT License</a>.</p>
-    <div align="center">
-        <p>Made with ❤️ by <a href="https://github.com//ntqltx">Alex (@ntqltx)</a></p>
-    </div>
+    <p>Made with ❤️ by <a href="https://github.com//ntqltx">Alex</a></p>
 </html>
