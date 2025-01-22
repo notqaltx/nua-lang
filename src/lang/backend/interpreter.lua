@@ -26,7 +26,7 @@ local interpret_methods = {
         local res, var_name = Results("RT"), node.var_name_token.value
         local new_value = context.symbol_table[var_name]
         if not new_value then
-            return res:failure(Errors:RTError(
+            return res:failure(Errors("RTError",
                 node.pos_start, node.pos_end,
                 string.format("\"%s\" is not defined.", var_name),
                 context
