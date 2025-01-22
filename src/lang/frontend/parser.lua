@@ -155,7 +155,10 @@ local Parser = {}
 local parse_methods = {
     advance = function(self)
         self.token_idx = self.token_idx + 1
-        self:update_current_token()
+        if self.token_idx < #self.tokens then
+            self.current_token = self.tokens[self.token_idx]
+        end
+        -- self:update_current_token()
         return self.current_token
     end,
     reverse = function(self, amount)
@@ -165,18 +168,20 @@ local parse_methods = {
         return self.current_token
     end,
     update_current_token = function(self)
-        print(#self.tokens, self.token_idx, table.unpack(self.tokens))
+        -- print(#self.tokens, self.token_idx, table.unpack(self.tokens))
         if self.token_idx >= 0 and self.token_idx < #self.tokens then
             self.current_token = self.tokens[self.token_idx]
         end
     end,
     parse = function(self)
         local res = self:expr()
-        if not res.error and self.current_token.type ~= TokenType.EOF then
-            return res:failure(Errors("InvalidSyntaxError",
-                self.current_token.pos_start, self.current_token.pos_end,
-                "Expected identifier, keyword, or expression."
-            ))
+        if res.error then return res end
+        if self.current_token.type ~= TokenType.EOF then
+            print("WARNING")
+            -- return res:failure(Errors("InvalidSyntaxError",
+            --     self.current_token.pos_start, self.current_token.pos_end,
+            --     "Expected identifier, keyword, or expression."
+            -- ))
         end
         return res
     end,
