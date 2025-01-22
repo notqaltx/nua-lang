@@ -192,10 +192,7 @@ local lexer_methods = {
             self:advance() -- Ignore whitespace
         elseif self.current_char == "//" then
             self:skip_comment() -- Skip Comment
-        elseif self.current_char == "\n" then
-            self.pos.ln = self.pos.ln + 1; self:advance()
-            -- need to fix it asap
-            -- self:add_token(TokenType.NEWLINE, self.pos)
+        elseif self.current_char == ";\n" then self:add_token(TokenType.NEWLINE, self.pos)
         elseif self.current_char == "\"" or self.current_char == "'" then
             local success, err = self:make_string()
             if not success then return nil, err end
@@ -217,7 +214,6 @@ local lexer_methods = {
     end,
     tokenize = function(self)
         while self.current_char ~= nil do
-            self.pos.start = self.pos.idx
             local success, err = self:scan_token()
             if not success then return {}, err end
         end
