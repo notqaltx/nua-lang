@@ -43,28 +43,27 @@ local RTError = setmetatable({}, { __index = Error })
 function RTError:new(start, _end, details, context)
     local instance = Error:new(start, _end, "Runtime Error", details)
     instance.context = context
-
+    instance.generate_traceback = function(self)
+        if not self.context then
+            return "Traceback: (no context available)\n"
+        end
+        local result = Strings.colored("red", "Traceback (most recent call last):\n")
+        local pos, ctx = self.pos_start, self.context
+        while ctx do
+            result = string.format("    --> File %s, line %d, in: %s\n", pos.fn, pos.ln + 1, ctx.display_name)..result
+            pos = ctx.parent_entry_pos; ctx = ctx.parent
+        end
+        return result
+    end
     setmetatable(instance, {
         __tostring = function(t)
             local result = t:generate_traceback()
             result = result..Strings.colored("red", string.format("%s: %s\n", t.error_name, t.details))
-            result = result..Strings.add_arrows(table.pack(t.pos_start.ft), t.pos_start, t.pos_end)
+            result = result..Strings.add_arrows(t.pos_start.ftx, t.pos_start, t.pos_end)
             return result
         end
     })
     return instance
-end
-function RTError:generate_traceback()
-    if not self.context then
-        return "Traceback: (no context available)\n"
-    end
-    local result = Strings.colored("red", "Traceback (most recent call last):\n")
-    local pos, ctx = self.pos_start, self.context
-    while ctx do
-        result = string.format("    --> File %s, line %d, in: %s\n", pos.fn, pos.ln + 1, ctx.display_name)..result
-        pos = ctx.parent_entry_pos; ctx = ctx.parent
-    end
-    return result
 end
 Errors.RTError = RTError
 

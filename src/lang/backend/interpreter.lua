@@ -43,13 +43,12 @@ local interpret_methods = {
         return res:success(new_value)
     end,
     visit_BinOpNode = function(self, node, context)
-        print(node.op_token.type)
         local res, result, error = Results("RT"), nil, nil
         local left = res:register(self:visit(node.left_node, context))
         if res.error then return res end
         local right = res:register(self:visit(node.right_node, context))
         if res.error then return res end
-        
+
         if node.op_token.type == TokenType.PLUS then result, error = left:added(right)
         elseif node.op_token.type == TokenType.MINUS then result, error = left:subbed(right)
         elseif node.op_token.type == TokenType.MUL then result, error = left:multed(right)
@@ -64,8 +63,17 @@ local interpret_methods = {
         elseif node.op_token.type == TokenType.AND then result, error = left:get_comparison_and(right)
         elseif node.op_token.type == TokenType.OR then result, error = left:get_comparison_or(right) end
 
-        if error then return res:failure(error)
-        else return res:success(result:set_pos(node.pos_start, node.pos_end)) end
+        if error then return res:failure(error) end
+        if result then
+            result = result:set_pos(node.pos_start, node.pos_end)
+            return res:success(result)
+        else
+            return res:failure(Errors("RTError",
+                node.pos_start, node.pos_end,
+                "Operation not supported",
+                context
+            ))
+        end
     end,
     visit_UnaryOpNode = function(self, node, context)
         local res, error = Results("RT"), nil

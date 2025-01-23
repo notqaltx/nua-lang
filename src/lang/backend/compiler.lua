@@ -30,7 +30,6 @@ function Compiler:run(fn, source)
 
     local result = interpreter:visit(ast.node, context)
     if result then
-        -- print(result.value)
         return result.value, result.error
     end
     return nil, "No result"

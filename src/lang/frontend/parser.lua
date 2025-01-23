@@ -119,7 +119,7 @@ local parse_methods = {
         ))
     end,
     power = function(self)
-        return self:bin_op(self.atom, {TokenType.POW, }, self.factor)
+        return self:bin_op(self.atom, {TokenType.POW}, self.factor)
     end,
     factor = function(self)
         local res, token = Results("Parse"), self.current_token
@@ -204,12 +204,21 @@ local parse_methods = {
         local left = res:register(a(self))
         if res.error then return res end
 
-        print("Current token type:", self.current_token.type)
-        print("Has operator:", ops[self.current_token.type])
-        
-        -- print(table.unpack(ops))
-        while (self.current_token and self.current_token.type)
-        and ops[self.current_token.type] do
+        while true do
+            local found = false
+            for _, op in pairs(ops) do
+                if type(op) == "table" then
+                    if self.current_token.type == op[1]
+                    and self.current_token.type == op[2] then
+                        found = true break
+                    end
+                else
+                    if self.current_token.type == op then
+                        found = true break
+                    end
+                end
+            end
+            if not found then break end
             local op_token = self.current_token
             res:register_advancement(); self:advance()
 

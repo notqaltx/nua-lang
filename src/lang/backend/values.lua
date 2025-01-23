@@ -1,11 +1,15 @@
 local Errors = require("src.lang.common.errors")
 
-local Values = {}
+local number_methods = {}
+local Values, Number = {}, {}
 local function is_instance(obj, class)
-    return getmetatable(obj) == class
+    if type(obj) ~= "table" then return false end
+    local obj_class = getmetatable(obj)
+    if not obj_class then return false end
+    if class == Number then return obj_class.__index == number_methods end
+    return false
 end
-local Number = {}
-local number_methods = {
+number_methods = {
     set_pos = function(self, start, _end)
         self.pos_start = start
         self.pos_end = _end
@@ -16,22 +20,33 @@ local number_methods = {
     end,
     added = function(self, other)
         if is_instance(other, Number) then
-            print(self.value, other.value)
             return Number:new(self.value + other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot add non-number value", self.context
+        )
     end,
     subbed = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value - other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot subtract non-number value", self.context
+        )
     end,
     multed = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value * other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot multiply non-number value", self.context
+        )
     end,
     divided = function(self, other)
         if is_instance(other, Number) then
@@ -44,60 +59,100 @@ local number_methods = {
             return Number:new(self.value / other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot divide non-number value", self.context
+        )
     end,
     powed = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value ^ other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot raise non-number value", self.context
+        )
     end,
     get_comparison_eq = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value == other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_ne = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value ~= other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_lt = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value < other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_gt = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value > other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_lte = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value <= other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_gte = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value >= other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_and = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value and other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_or = function(self, other)
         if is_instance(other, Number) then
             return Number:new(self.value or other.value)
                 :set_context(self.context), nil
         end
+        return nil, Errors.RTError(
+            self.pos_start, self.pos_end,
+            "Cannot compare non-number value", self.context
+        )
     end,
     get_comparison_not = function(self)
         return Number:new(not self.value)
@@ -116,9 +171,7 @@ local number_methods = {
 function Number:new(value)
     local instance = { value = value }
     setmetatable(instance, {
-        __index = function(t, key)
-            return number_methods[key] or rawget(t, key)
-        end,
+        __index = number_methods,
         __tostring = function(t)
              return tostring(t.value)
         end
