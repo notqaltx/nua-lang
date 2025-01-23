@@ -9,7 +9,9 @@ Compiler.__index = Compiler
 
 function Compiler:new()
     local instance = { global_symbol_table = Values("SymbolTable") }
-    instance.global_symbol_table["nil"] = Values("Number", 0)
+    instance.global_symbol_table["null"] = Values("Number", 0)
+    instance.global_symbol_table["true"] = Values("Number", 1)
+    instance.global_symbol_table["false"] = Values("Number", 0)
     setmetatable(instance, Compiler); return instance
 end
 function Compiler:run(fn, source)

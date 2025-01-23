@@ -50,6 +50,58 @@ local number_methods = {
                 :set_context(self.context), nil
         end
     end,
+    get_comparison_eq = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value == other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_ne = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value ~= other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_lt = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value < other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_gt = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value > other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_lte = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value <= other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_gte = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value >= other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_and = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value and other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_or = function(self, other)
+        if is_instance(other, Number) then
+            return Number:new(self.value or other.value)
+                :set_context(self.context), nil
+        end
+    end,
+    get_comparison_not = function(self)
+        return Number:new(not self.value)
+            :set_context(self.context), nil
+    end,
     copy = function(self)
         local copy = Number:new(self.value)
         copy:set_pos(self.pos_start, self.pos_end)

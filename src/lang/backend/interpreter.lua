@@ -53,7 +53,15 @@ local interpret_methods = {
         elseif node.op_token.type == TokenType.MINUS then result, error = left:subbed(right)
         elseif node.op_token.type == TokenType.MUL then result, error = left:multed(right)
         elseif node.op_token.type == TokenType.DIV then result, error = left:divided(right)
-        elseif node.op_token.type == TokenType.POW then result, error = left:powed(right) end
+        elseif node.op_token.type == TokenType.POW then result, error = left:powed(right)
+        elseif node.op_token.type == TokenType.EE then result, error = left:get_comparison_eq(right)
+        elseif node.op_token.type == TokenType.NE then result, error = left:get_comparison_ne(right)
+        elseif node.op_token.type == TokenType.LT then result, error = left:get_comparison_lt(right)
+        elseif node.op_token.type == TokenType.GT then result, error = left:get_comparison_gt(right)
+        elseif node.op_token.type == TokenType.LTE then result, error = left:get_comparison_lte(right)
+        elseif node.op_token.type == TokenType.GTE then result, error = left:get_comparison_gte(right)
+        elseif node.op_token.type == TokenType.AND then result, error = left:get_comparison_and(right)
+        elseif node.op_token.type == TokenType.OR then result, error = left:get_comparison_or(right) end
 
         if error then return res:failure(error)
         else return res:success(result:set_pos(node.pos_start, node.pos_end)) end
@@ -64,6 +72,8 @@ local interpret_methods = {
         if res.error then return res end
         if node.op_token.type == TokenType.MINUS then
             number, error = number:multed(Values("Number", -1))
+        elseif node.op_token.type == TokenType.NOT then
+            number, error = number:get_comparison_not()
         end
         if error then return res:failure(error)
         else return res:success(number:set_pos(node.pos_start, node.pos_end)) end
