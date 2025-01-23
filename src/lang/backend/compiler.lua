@@ -29,7 +29,11 @@ function Compiler:run(fn, source)
     context.symbol_table = self.global_symbol_table
 
     local result = interpreter:visit(ast.node, context)
-    return result.value, result.error
+    if result then
+        print(result.value)
+        return result.value, result.error
+    end
+    return nil, result, error
 end
 
 return Compiler

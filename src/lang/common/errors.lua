@@ -2,19 +2,21 @@ local Strings = require("src.lang.common.utils.strings")
 local Errors, Error = {}, {}
 
 function Error:new(start, _end, error, details)
+    print(start, _end, error, details)
     return setmetatable({
             pos_start = start, pos_end = _end,
             error_name = error, details = details
         }, {
             __tostring = function(t)
                 local result = Strings.colored("red", string.format("%s: %s\n", t.error_name, t.details))
-                result = result..string.format("    --> File %s, line: %d\n", t.pos_start.fn, t.pos_start.ln + 1)
-                
-                local source_lines = Strings.split(t.pos_start.ft or "", "\n")
-                local error_line = source_lines[t.pos_start.ln + 1]
-                result = result..error_line.."\n"
-
-                result = result..Strings.add_arrows(table.pack(t.pos_start.ft), t.pos_start, t.pos_end)
+                if t.pos_start then
+                    result = result..string.format("    --> File %s, line: %d\n",
+                        t.pos_start.fn or "unknown",
+                        (t.pos_start.ln or 0) + 1)
+                    if t.pos_start.ft then
+                        result = result..Strings.add_arrows(t.pos_start.ft, t.pos_start, t.pos_end)
+                    end
+                end
                 return result
             end
         }

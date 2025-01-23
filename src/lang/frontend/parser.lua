@@ -136,7 +136,7 @@ local parse_methods = {
             if res.error then return res end
             return res:success(Nodes("VarAssignNode", var_name, expr))
         end
-        local node = res:register(self:bin_op(self.term, {TokenType.PLUS, TokenType.MINUS}))
+        local node = res:register(self:bin_op(self.comp_expr, {TokenType.PLUS, TokenType.MINUS}))
         if res.error then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,

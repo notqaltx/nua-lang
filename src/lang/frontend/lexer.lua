@@ -115,8 +115,7 @@ local lexer_methods = {
         local start = self.pos:copy()
         local num_str, dot_count = "", 0
     
-        local match = string.match(Tokens.DIGITS, self.current_char)
-        while self.current_char ~= nil and match.."." do
+        while self.current_char ~= nil and (self:is_digit(self.current_char) or self.current_char == ".") do
             if self.current_char == "." then
                 if dot_count == 1 then break end
                 dot_count = dot_count + 1

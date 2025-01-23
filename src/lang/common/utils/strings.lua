@@ -42,26 +42,27 @@ function Strings.split(input, sep)
     return t
 end
 function Strings.add_arrows(text, pos_start, pos_end)
-    local source = table.unpack(text)
-    local idx_start = math.max(string.find(source, '\n', 0, pos_start.idx + 1), 0)
-    local idx_end = string.find(source, '\n', idx_start + 1) or string.len(source)
-    if idx_end < 0 then idx_end = string.len(source) end
-
+    if not text or not pos_start or not pos_end then
+        return ""
+    end
+    local source = text
+    local idx_start = math.max((source:find('\n', 0, pos_start.idx + 1) or 0), 0)
+    local idx_end = source:find('\n', idx_start + 1) or #source
+    
     local result_str = ""
     local line_count = pos_end.ln - pos_start.ln + 1
-    for i in range(1, line_count) do
-        local line = string.sub(source, idx_start, idx_end)
-        local col_start = (i == 0) and pos_start.column or 0
-        local col_end = (i == line_count) and pos_end.column or string.len(line)
+    for i = 1, line_count do
+        local line = source:sub(idx_start + 1, idx_end)
+        local col_start = (i == 1) and pos_start.col or 0
+        local col_end = (i == line_count) and pos_end.col or #line
 
-        result_str = string.sub(line, col_end + 1)..'\n'
-        result_str = Strings.colored(colors.red, string.rep("~", (idx_end - idx_start)))..'\n'
-
+        result_str = result_str .. line .. '\n'
+        result_str = result_str .. string.rep(" ", col_start) .. 
+                    Strings.colored("red", string.rep("^", math.max(1, col_end - col_start))) .. '\n'
         idx_start = idx_end
-        idx_end = source:find('\n', idx_start + 1) or string.len(source)
-        if idx_end < 0 then idx_end = string.len(source) end
+        idx_end = source:find('\n', idx_start + 1) or #source
     end
-    return string.gsub(result_str, '\t', '')
+    return result_str:gsub('\t', '')
 end
 
 return Strings

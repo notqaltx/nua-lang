@@ -40,11 +40,8 @@ local function execute_file(filename)
     local compiler = Compiler:new()
     local result, error = compiler:run(filename, content)
     if error then
-        if type(err) == "table" and err.as_string then
-            colored_print(colors.red, err:as_string())
-        else
-            colored_print(colors.red, tostring(err))
-        end
+        colored_print(colors.red, tostring(error))
+        return
     else
         print(result)
         colored_print(colors.green, "Script executed successfully.")
