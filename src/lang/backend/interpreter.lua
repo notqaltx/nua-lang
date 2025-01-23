@@ -43,6 +43,7 @@ local interpret_methods = {
         return res:success(new_value)
     end,
     visit_BinOpNode = function(self, node, context)
+        print(node.op_token.type)
         local res, result, error = Results("RT"), nil, nil
         local left = res:register(self:visit(node.left_node, context))
         if res.error then return res end
@@ -77,6 +78,24 @@ local interpret_methods = {
         end
         if error then return res:failure(error)
         else return res:success(number:set_pos(node.pos_start, node.pos_end)) end
+    end,
+    visit_IfNode = function(self, node, context)
+        local res = Results("RT")
+        for condition, expr in pairs(node.cases) do
+            local condition_value = res:register(self:visit(condition, context))
+            if res.error then return res end
+            if condition_value:is_true() then
+                local expr_value = res:register(self:visit(expr, context))
+                if res.error then return res end
+                return res:success(expr_value)
+            end
+        end
+        if node.else_case then
+            local else_expr = res:register(self:visit(node.else_case, context))
+            if res.error then return res end
+            return res:success(else_expr)
+        end
+        return res:success(nil)
     end,
 }
 function Interpreter:new()

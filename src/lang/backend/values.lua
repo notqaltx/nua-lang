@@ -16,6 +16,7 @@ local number_methods = {
     end,
     added = function(self, other)
         if is_instance(other, Number) then
+            print(self.value, other.value)
             return Number:new(self.value + other.value)
                 :set_context(self.context), nil
         end
@@ -107,6 +108,9 @@ local number_methods = {
         copy:set_pos(self.pos_start, self.pos_end)
         copy:set_context(self.context)
         return copy
+    end,
+    is_true = function(self)
+        return self.value ~= 0
     end,
 }
 function Number:new(value)

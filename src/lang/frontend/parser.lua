@@ -19,22 +19,69 @@ local parse_methods = {
         return self.current_token
     end,
     update_current_token = function(self)
-        if self.token_idx >= 0 and self.token_idx <= #self.tokens then
-            self.current_token = self.tokens[self.token_idx]
+        if self.token_idx >= 0 and self.token_idx < #self.tokens then
+            self.current_token = self.tokens[self.token_idx + 1]
         else self.current_token = nil end
     end,
     parse = function(self)
         local res = self:expr()
         if res.error then return res end
-        if self.current_token.type ~= TokenType.EOF then
-            print("WARNING: Token mismatch")
-            -- Uncomment the error handling
+        if self.current_token and self.current_token.type ~= TokenType.EOF then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
                 "Expected identifier, keyword, or expression."
             ))
         end
         return res
+    end,
+    if_expr = function(self)
+        local res = Results("Parse")
+        local cases, else_case = {}, nil
+
+        if not self.current_token(TokenType.KEYWORD, "if") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"if\"."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local condition = res:register(self:expr())
+        if res.error then return res end
+
+        if not self.current_token(TokenType.KEYWORD, "then") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"then\"."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local then_body = res:register(self:expr())
+        if res.error then return res end
+        cases[#cases + 1] = { condition, then_body }
+
+        while self.current_token(TokenType.KEYWORD, "elif") do
+            res:register_advancement(); self:advance()
+            local condition = res:register(self:expr())
+            if res.error then return res end
+
+            if not self.current_token(TokenType.KEYWORD, "then") then
+                return res:failure(Errors("InvalidSyntaxError",
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    "Expected \"then\"."
+                ))
+            end
+            res:register_advancement(); self:advance()
+            local then_body = res:register(self:expr())
+            if res.error then return res end
+            cases[#cases + 1] = { condition, then_body }
+        end
+        if self.current_token(TokenType.KEYWORD, "else") then
+            res:register_advancement(); self:advance()
+            local else_body = res:register(self:expr())
+            if res.error then return res end
+            else_case = else_body
+        end
+        return res:success(Nodes("IfNode", cases, else_case))
     end,
     atom = function(self)
         local res, token = Results("Parse"), self.current_token
@@ -60,6 +107,11 @@ local parse_methods = {
                     "Expected \")\""
                 ))
             end
+
+        elseif token(TokenType.KEYWORD, "if") then
+            local if_expr = res:register(self:if_expr())
+            if res.error then return res end
+            return res:success(if_expr)
         end
         return res:failure(Errors("InvalidSyntaxError",
             token.pos_start, token.pos_end,
@@ -67,17 +119,18 @@ local parse_methods = {
         ))
     end,
     power = function(self)
-        return self:bin_op(self.atom, {TokenType.POW}, self.factor)
+        return self:bin_op(self.atom, {TokenType.POW, }, self.factor)
     end,
     factor = function(self)
         local res, token = Results("Parse"), self.current_token
+        local valid_tokens = { [TokenType.PLUS] = true, [TokenType.MINUS] = true }
         if not token then
             return res:failure(Errors("InvalidSyntaxError",
                 nil, nil,
                 "Unexpected end of input."
             ))
         end
-        if token.type == TokenType.PLUS or token.type == TokenType.MINUS then
+        if valid_tokens[token.type] then
             res:register_advancement(); self:advance()
             local factor = res:register(self:factor())
             if res.error then return res end
@@ -101,7 +154,7 @@ local parse_methods = {
             return res:success(Nodes("UnaryOpNode", op_token, expr))
         end
         local node = res:register(self:bin_op(self.arith_expr, {
-            TokenType.EE, TokenType.NE, TokenType.LT, 
+            TokenType.EE, TokenType.NE, TokenType.LT,
             TokenType.GT, TokenType.LTE, TokenType.GTE
         }))
         if res.error then 
@@ -136,7 +189,7 @@ local parse_methods = {
             if res.error then return res end
             return res:success(Nodes("VarAssignNode", var_name, expr))
         end
-        local node = res:register(self:bin_op(self.comp_expr, {TokenType.PLUS, TokenType.MINUS}))
+        local node = res:register(self:bin_op(self.comp_expr, {TokenType.AND, TokenType.OR}))
         if res.error then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
@@ -150,10 +203,13 @@ local parse_methods = {
         local res = Results("Parse")
         local left = res:register(a(self))
         if res.error then return res end
+
+        print("Current token type:", self.current_token.type)
+        print("Has operator:", ops[self.current_token.type])
         
-        -- while table.find(ops, self.current_token.type)
-        while ops[self.current_token.type]
-        and self.current_token.type ~= TokenType.EOF do
+        -- print(table.unpack(ops))
+        while (self.current_token and self.current_token.type)
+        and ops[self.current_token.type] do
             local op_token = self.current_token
             res:register_advancement(); self:advance()
 
@@ -165,7 +221,7 @@ local parse_methods = {
     end,
 }
 function Parser:new(tokens)
-    local instance = { tokens = tokens, token_idx = 0 }
+    local instance = { tokens = tokens, token_idx = -1 }
     setmetatable(instance, {__index = function(t, key)
         return parse_methods[key] or rawget(t, key)
     end}); instance:advance()

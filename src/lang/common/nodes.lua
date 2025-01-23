@@ -91,6 +91,14 @@ local UnaryOp = create_node("UnaryOpNode", function(_, op_token, node)
         end
     })
 end)
+local If = create_node("IfNode", function(_, cases, else_case)
+    return setmetatable({
+        __name = "IfNode",
+        cases = cases, else_case = else_case,
+        pos_start = cases[0][0].pos_start,
+        pos_end = (else_case or cases[#cases - 1][0]).pos_end
+    }, { __index = If })
+end)
 return setmetatable(Nodes, {
     __call = function(_, subclass_name, ...)
         local subclass = Nodes[tostring(subclass_name)]

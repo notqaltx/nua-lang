@@ -2,7 +2,6 @@ local Strings = require("src.lang.common.utils.strings")
 local Errors, Error = {}, {}
 
 function Error:new(start, _end, error, details)
-    print(start, _end, error, details)
     return setmetatable({
             pos_start = start, pos_end = _end,
             error_name = error, details = details

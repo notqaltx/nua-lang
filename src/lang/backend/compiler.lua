@@ -18,7 +18,7 @@ function Compiler:run(fn, source)
     local lexer = Lexer:new(fn, source)
     local tokens, error = lexer:tokenize()
     if error then return nil, error end
-    print(table.unpack(tokens))
+    -- print(table.unpack(tokens))
 
     local parser = Parser:new(tokens)
     local ast = parser:parse()
@@ -30,10 +30,10 @@ function Compiler:run(fn, source)
 
     local result = interpreter:visit(ast.node, context)
     if result then
-        print(result.value)
+        -- print(result.value)
         return result.value, result.error
     end
-    return nil, result, error
+    return nil, "No result"
 end
 
 return Compiler
