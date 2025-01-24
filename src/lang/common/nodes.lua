@@ -99,6 +99,27 @@ local If = create_node("IfNode", function(_, cases, else_case)
         pos_end = (else_case or cases[#cases][1]).pos_end
     }, { __index = If })
 end)
+local For = create_node("ForNode", function(
+    _, var_name_token, start_node,
+    end_node, step_node, body_node
+) return setmetatable({
+        __name = "ForNode",
+        var_name_token = var_name_token,
+        start_node = start_node, end_node = end_node,
+        step_node = step_node, body_node = body_node,
+        pos_start = var_name_token.pos_start,
+        pos_end = body_node.pos_end
+    }, { __index = For })
+end)
+local While = create_node("WhileNode", function(_, condition_node, body_node)
+    return setmetatable({
+        __name = "WhileNode",
+        condition_node = condition_node,
+        body_node = body_node,
+        pos_start = condition_node.pos_start,
+        pos_end = body_node.pos_end
+    }, { __index = While })
+end)
 return setmetatable(Nodes, {
     __call = function(_, subclass_name, ...)
         local subclass = Nodes[tostring(subclass_name)]

@@ -84,8 +84,10 @@ local interpret_methods = {
     end,
     visit_UnaryOpNode = function(self, node, context)
         local res, error = Results("RT"), nil
+        print("unary op node")
         local number = res:register(self:visit(node.node, context))
         if res.error then return res end
+
         if node.op_token.type == TokenType.MINUS then
             number, error = number:multed(Values("Number", -1))
         elseif node.op_token.type == TokenType.NOT then
@@ -112,6 +114,43 @@ local interpret_methods = {
             local else_expr = res:register(self:visit(node.else_case, context))
             if res.error then return res end
             return res:success(else_expr)
+        end
+        return res:success(Values("Number", 0))
+    end,
+    visit_ForNode = function(self, node, context)
+        local res = Results("RT")
+        local start_value = res:register(self:visit(node.start_node, context))
+        if res.error then return res end
+        local end_value = res:register(self:visit(node.end_node, context))
+        if res.error then return res end
+
+        local step_value
+        if node.step_node then
+            step_value = res:register(self:visit(node.step_node, context))
+            if res.error then return res end
+        else step_value = Values("Number", 1) end
+
+        local condition
+        local i = start_value.value
+        if step_value.value > 0 then condition = function() return i < end_value.value end
+        else condition = function() return i > end_value.value end end
+
+        while condition() do
+            context.symbol_table:set(node.var_name_token.value, Values("Number", i))
+            i = i + step_value.value
+            res:register(self:visit(node.body_node, context))
+            if res.error then return res end
+        end
+        return res:success(Values("Number", 0))
+    end,
+    visit_WhileNode = function(self, node, context)
+        local res = Results("RT")
+        while true do
+            local condition = res:register(self:visit(node.condition_node, context))
+            if res.error then return res end
+            if not condition:is_true() then break end
+            res:register(self:visit(node.body_node, context))
+            if res.error then return res end
         end
         return res:success(Values("Number", 0))
     end,

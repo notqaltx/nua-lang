@@ -23,10 +23,19 @@ local parse_methods = {
             self.current_token = self.tokens[self.token_idx + 1]
         else self.current_token = nil end
     end,
+    consume = function(self, type, value, res)
+        if self.current_token.type ~= type and self.current_token.value ~= value then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \""..value.."\" after \""..type.."\""
+            ))
+        end
+    end,
     parse = function(self)
         local res = self:expr()
         if res.error then return res end
         if self.current_token and self.current_token.type ~= TokenType.EOF then
+            print("parse error")
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
                 "Expected identifier, keyword, or expression."
@@ -46,51 +55,181 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
+        self:consume(TokenType.LPAREN, "(", res)
+
+        res:register_advancement(); self:advance()
         local condition = res:register(self:expr())
         if res.error then return res end
 
-        if not self.current_token(TokenType.KEYWORD, "then") then
+        self:consume(TokenType.RPAREN, ")", res)
+        res:register_advancement(); self:advance()
+
+        if self.current_token.type ~= TokenType.LBRACKET then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"then\"."
+                "Expected \"{\" after if condition."
             ))
         end
         res:register_advancement(); self:advance()
         local then_body = res:register(self:expr())
         if res.error then return res end
+
         cases[cases_count + 1] = {[1] = condition, [2] = then_body}
         cases_count = cases_count + 1
+        self:consume(TokenType.RBRACKET, "}", res)
+        res:register_advancement(); self:advance()
 
         while self.current_token(TokenType.KEYWORD, "elif") do
             res:register_advancement(); self:advance()
+            self:consume(TokenType.LPAREN, "(", res)
+            res:register_advancement(); self:advance()
+
             local condition = res:register(self:expr())
             if res.error then return res end
+            self:consume(TokenType.RPAREN, ")", res)
+            res:register_advancement(); self:advance()
 
-            if not self.current_token(TokenType.KEYWORD, "then") then
+            if self.current_token.type ~= TokenType.LBRACKET then
                 return res:failure(Errors("InvalidSyntaxError",
                     self.current_token.pos_start, self.current_token.pos_end,
-                    "Expected \"then\"."
+                    "Expected \"{\" after elif condition."
                 ))
             end
             res:register_advancement(); self:advance()
             local then_body = res:register(self:expr())
             if res.error then return res end
+
             cases[cases_count + 1] = {[1] = condition, [2] = then_body}
             cases_count = cases_count + 1
+
+            self:consume(TokenType.RBRACKET, "}", res)
+            res:register_advancement(); self:advance()
         end
         if self.current_token(TokenType.KEYWORD, "else") then
+            res:register_advancement(); self:advance()
+            if self.current_token.type ~= TokenType.LBRACKET then
+                return res:failure(Errors("InvalidSyntaxError",
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    "Expected \"{\" after else."
+                ))
+            end
             res:register_advancement(); self:advance()
             local else_body = res:register(self:expr())
             if res.error then return res end
             else_case = else_body
+
+            self:consume(TokenType.RBRACKET, "}", res)
+            res:register_advancement(); self:advance()
         end
         return res:success(Nodes("IfNode", cases, else_case))
+    end,
+    for_expr = function(self)
+        local res = Results("Parse")
+        if not self.current_token(TokenType.KEYWORD, "for") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"for\"."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        if self.current_token.type ~= TokenType.IDENTIFIER then
+            print("for_expr error")
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected identifier after \"for\"."
+            ))
+        end
+        local var_name_token = self.current_token
+        res:register_advancement(); self:advance()
+        if self.current_token.type ~= TokenType.EQ then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"=\" after variable identifier."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local start_node = res:register(self:expr())
+        if res.error then return res end
+
+        if not self.current_token(TokenType.KEYWORD, "to") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"to\" after start value."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local end_node = res:register(self:expr())
+        if res.error then return res end
+
+        local step_node = nil
+        if self.current_token(TokenType.KEYWORD, "step") then
+            res:register_advancement(); self:advance()
+            step_node = res:register(self:expr())
+            if res.error then return res end
+        end
+        if not self.current_token(TokenType.KEYWORD, "do") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"do\" after for loop."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local body_node = res:register(self:expr())
+        if res.error then return res end
+        return res:success(Nodes("ForNode", var_name_token, start_node,
+            end_node, step_node, body_node))
+    end,
+    while_expr = function(self)
+        local res = Results("Parse")
+        if not self.current_token(TokenType.KEYWORD, "while") then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"while\"."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        if self.current_token.type ~= TokenType.LPAREN then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"(\" after \"while\"."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local condition_node = res:register(self:expr())
+        if res.error then return res end
+
+        if self.current_token.type ~= TokenType.RPAREN then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \")\" after condition body."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        if self.current_token.type ~= TokenType.LBRACKET then
+            return res:failure(Errors("InvalidSyntaxError",
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected \"{\" after while condition."
+            ))
+        end
+        res:register_advancement(); self:advance()
+        local body_node = res:register(self:expr())
+        if res.error then return res end
+
+        self:consume(TokenType.RBRACKET, "}", res)
+        res:register_advancement(); self:advance()
+        return res:success(Nodes("WhileNode", condition_node, body_node))
     end,
     atom = function(self)
         local res, token = Results("Parse"), self.current_token
         if token.type == TokenType.INT or token.type == TokenType.FLOAT then
             res:register_advancement(); self:advance()
             return res:success(Nodes("NumberNode", token))
+
+        elseif token.type == TokenType.PLUS or token.type == TokenType.MINUS then
+            res:register_advancement(); self:advance()
+            local factor = res:register(self:factor())
+            if res.error then return res end
+            return res:success(Nodes("UnaryOpNode", token, factor))
 
         elseif token.type == TokenType.IDENTIFIER then
             res:register_advancement(); self:advance()
@@ -107,38 +246,64 @@ local parse_methods = {
             else
                 return res:failure(Errors("InvalidSyntaxError",
                     self.current_token.pos_start, self.current_token.pos_end
-                    "Expected \")\""
+                    "Expected \")\" after expression."
                 ))
             end
-
         elseif token(TokenType.KEYWORD, "if") then
             local if_expr = res:register(self:if_expr())
             if res.error then return res end
             return res:success(if_expr)
+
+        elseif token(TokenType.KEYWORD, "for") then
+            local for_expr = res:register(self:for_expr())
+            if res.error then return res end
+            return res:success(for_expr)
+
+        elseif token(TokenType.KEYWORD, "while") then
+            local while_expr = res:register(self:while_expr())
+            if res.error then return res end
+            return res:success(while_expr)
         end
+        print("atom error")
         return res:failure(Errors("InvalidSyntaxError",
             token.pos_start, token.pos_end,
             "Expected identifier, keyword or expression."
         ))
     end,
     power = function(self)
-        return self:bin_op(self.atom, {TokenType.POW}, self.factor)
+        return self:bin_op(self.atom, {TokenType.POW, }, self.factor)
     end,
     factor = function(self)
         local res, token = Results("Parse"), self.current_token
-        local valid_tokens = { [TokenType.PLUS] = true, [TokenType.MINUS] = true }
         if not token then
             return res:failure(Errors("InvalidSyntaxError",
-                nil, nil,
-                "Unexpected end of input."
+                nil, nil, "Unexpected end of input."
             ))
         end
+        local valid_tokens = {[TokenType.PLUS] = true, [TokenType.MINUS] = true}
         if valid_tokens[token.type] then
             res:register_advancement(); self:advance()
             local factor = res:register(self:factor())
-            if res.error then return res end
+            if res.error then
+                print("Error in factor:", res.error)
+                return res
+            end
             return res:success(Nodes("UnaryOpNode", token, factor))
         end
+        -- if token.type == TokenType.PLUS or token.type == TokenType.MINUS then
+        --     res:register_advancement(); self:advance()
+        --     if self.current_token.type == TokenType.INT 
+        --     or self.current_token.type == TokenType.FLOAT then
+        --         local num_token = self.current_token
+        --         res:register_advancement(); self:advance()
+        --         return res:success(Nodes("UnaryOpNode", token, Nodes("NumberNode", num_token)))
+        --     else
+        --         return res:failure(Errors("InvalidSyntaxError",
+        --             self.current_token.pos_start, self.current_token.pos_end,
+        --             "Expected number after unary operator."
+        --         ))
+        --     end
+        -- end
         return self:power()
     end,
     term = function(self)
@@ -160,7 +325,8 @@ local parse_methods = {
             TokenType.EE, TokenType.NE, TokenType.LT,
             TokenType.GT, TokenType.LTE, TokenType.GTE
         }))
-        if res.error then 
+        if res.error then
+            print("comp_expr error")
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
                 "Expected identifier, keyword or expression."
@@ -194,6 +360,7 @@ local parse_methods = {
         end
         local node = res:register(self:bin_op(self.comp_expr, {TokenType.AND, TokenType.OR}))
         if res.error then
+            print("expr error")
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
                 "Expected identifier, keyword or expression."
@@ -208,21 +375,24 @@ local parse_methods = {
         if res.error then return res end
 
         while true do
-            local found = false
-            for _, op in pairs(ops) do
+            local found, op_token = false, nil
+            for _, op in ipairs(ops) do
                 if type(op) == "table" then
                     if self.current_token.type == op[1]
                     and self.current_token.type == op[2] then
-                        found = true break
+                        found = true 
+                        op_token = self.current_token
+                        break
                     end
                 else
                     if self.current_token.type == op then
-                        found = true break
+                        found = true
+                        op_token = self.current_token
+                        break
                     end
                 end
             end
             if not found then break end
-            local op_token = self.current_token
             res:register_advancement(); self:advance()
 
             local right = res:register(b(self))
