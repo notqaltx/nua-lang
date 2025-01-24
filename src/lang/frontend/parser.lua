@@ -37,6 +37,7 @@ local parse_methods = {
     if_expr = function(self)
         local res = Results("Parse")
         local cases, else_case = {}, nil
+        local cases_count = 0
 
         if not self.current_token(TokenType.KEYWORD, "if") then
             return res:failure(Errors("InvalidSyntaxError",
@@ -57,7 +58,8 @@ local parse_methods = {
         res:register_advancement(); self:advance()
         local then_body = res:register(self:expr())
         if res.error then return res end
-        cases[#cases + 1] = { condition, then_body }
+        cases[cases_count + 1] = {[1] = condition, [2] = then_body}
+        cases_count = cases_count + 1
 
         while self.current_token(TokenType.KEYWORD, "elif") do
             res:register_advancement(); self:advance()
@@ -73,7 +75,8 @@ local parse_methods = {
             res:register_advancement(); self:advance()
             local then_body = res:register(self:expr())
             if res.error then return res end
-            cases[#cases + 1] = { condition, then_body }
+            cases[cases_count + 1] = {[1] = condition, [2] = then_body}
+            cases_count = cases_count + 1
         end
         if self.current_token(TokenType.KEYWORD, "else") then
             res:register_advancement(); self:advance()
@@ -91,7 +94,7 @@ local parse_methods = {
 
         elseif token.type == TokenType.IDENTIFIER then
             res:register_advancement(); self:advance()
-            return res.success(Nodes("VarAccessNode", token))
+            return res:success(Nodes("VarAccessNode", token))
 
         elseif token.type == TokenType.LPAREN then
             res:register_advancement(); self:advance()

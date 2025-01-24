@@ -8,9 +8,13 @@ local parse_methods = {
     end,
     register = function(self, res)
         self.last_registered_advance = self.advance_count
-        self.advance_count = self.advance_count + res.advance_count
-        if res.error then self.error = res.error end
-        return res.node
+        if res and type(res) == "table" then
+            local advance_count = res.advance_count or 0
+            self.advance_count = self.advance_count + advance_count
+            if res.error then self.error = res.error end
+            return res.node
+        end
+        return nil
     end,
     try_regiser = function(self, res)
         if res.error then

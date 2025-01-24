@@ -165,7 +165,13 @@ number_methods = {
         return copy
     end,
     is_true = function(self)
-        return self.value ~= 0
+        if type(self.value) == "number" then
+            if self.value == 1 then return true
+            else return false end
+        end
+        if type(self.value) == "boolean" then return self.value end
+        print("Unexpected value type:", type(self.value))
+        return false
     end,
 }
 function Number:new(value)

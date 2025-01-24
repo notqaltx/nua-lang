@@ -8,6 +8,13 @@ local Token, TokenType = Tokens.Token, Tokens.TokenType
 local Interpreter = {}
 local interpret_methods = {
     visit = function(self, node, context)
+        if not node then
+            return Results("RT"):failure(Errors("RTError",
+                node.pos_start, node.pos_end,
+                "No node to visit",
+                context
+            ))
+        end
         local method_name = "visit_"..tostring(node.__name)
         local method = self[method_name] or self.no_visit_method
         return method(self, node, context)
@@ -89,10 +96,13 @@ local interpret_methods = {
     end,
     visit_IfNode = function(self, node, context)
         local res = Results("RT")
-        for condition, expr in pairs(node.cases) do
+        for _, case in ipairs(node.cases) do
+            local condition, expr = case[1], case[2]
             local condition_value = res:register(self:visit(condition, context))
             if res.error then return res end
-            if condition_value:is_true() then
+
+            local is_true = condition_value:is_true()
+            if is_true then
                 local expr_value = res:register(self:visit(expr, context))
                 if res.error then return res end
                 return res:success(expr_value)
@@ -103,7 +113,7 @@ local interpret_methods = {
             if res.error then return res end
             return res:success(else_expr)
         end
-        return res:success(nil)
+        return res:success(Values("Number", 0))
     end,
 }
 function Interpreter:new()
