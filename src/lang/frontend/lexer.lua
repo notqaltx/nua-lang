@@ -106,9 +106,8 @@ local lexer_methods = {
             escape_character = false
         end
         if self:is_at_end() then
-            return nil, Errors:IllegalCharError(start, self.pos:copy(), "Unterminated string")
-        end
-        self:advance(); print(str)
+            return nil, Errors("IllegalCharError", start, self.pos:copy(), "Unterminated string")
+        end; self:advance()
         return self:token(TokenType.STRING, str, start), nil
     end,
     make_number = function(self)
@@ -144,7 +143,6 @@ local lexer_methods = {
         end
         local new_token = is_keyword(id_str)
             and TokenType.KEYWORD or TokenType.IDENTIFIER
-        print(new_token, id_str)
         return self:token(new_token, id_str, start)
     end,
     skip_comment = function(self)
