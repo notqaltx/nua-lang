@@ -88,6 +88,13 @@ local lexer_methods = {
         elseif self.current_char == ">" then self:advance(); token_type = TokenType.PGT
         end return self:add_token(token_type, start, self.pos)
     end,
+    make_dot = function(self)
+        local token_type = TokenType.DOT
+        local start = self.pos:copy(); self:advance()
+
+        if self.current_char == "." then self:advance(); token_type = TokenType.DD
+        end return self:add_token(token_type, start, self.pos)
+    end,
     make_string = function(self)
         local str, start = "", self.pos:copy()
         local escape_character = false
@@ -116,10 +123,13 @@ local lexer_methods = {
     
         while self.current_char ~= nil and (self:is_digit(self.current_char) or self.current_char == ".") do
             if self.current_char == "." then
+                if self:peek() == "." then break end
                 if dot_count == 1 then break end
                 dot_count = dot_count + 1
                 num_str = num_str.."."
-            else num_str = num_str..self.current_char end
+            else
+                num_str = num_str..self.current_char
+            end
             self:advance()
         end
         local tonum = tonumber(num_str)
@@ -161,12 +171,12 @@ local lexer_methods = {
         elseif self.current_char == "{" then self:add_token(TokenType.LBRACKET, self.pos)
         elseif self.current_char == "}" then self:add_token(TokenType.RBRACKET, self.pos)
         elseif self.current_char == "," then self:add_token(TokenType.COMMA, self.pos)
-        elseif self.current_char == "." then self:add_token(TokenType.DOT, self.pos)
         elseif self.current_char == "+" then self:add_token(TokenType.PLUS, self.pos)
         elseif self.current_char == "^" then self:add_token(TokenType.POW, self.pos)
         elseif self.current_char == ":" then self:add_token(TokenType.COLON, self.pos)
         elseif self.current_char == ";" then self:add_token(TokenType.SEMICOLON, self.pos)
         elseif self.current_char == "*" then self:add_token(TokenType.MUL, self.pos)
+        elseif self.current_char == "." then self:make_dot()
         elseif self.current_char == "=" then self:make_equals()
         elseif self.current_char == "<" then self:make_less_than()
         elseif self.current_char == ">" then self:make_greater_than()

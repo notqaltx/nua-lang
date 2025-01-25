@@ -18,6 +18,7 @@ local TokenType = {
     AMPERSAND = 'AMPERSAND',
     COMMA = 'COMMA',
     DOT = 'DOT',
+    DD = 'DD',
     SEMICOLON = 'SEMICOLON',
     COLON = 'COLON',
     BANG = 'BANG',
@@ -40,8 +41,8 @@ local LETTERS_DIGITS = LETTERS..DIGITS
 
 local KEYWORDS = {
     'var', 'not', 'if', 'then',
-    'elif', 'else', 'for', 'to', 'step',
-    'while', 'func', 'return',
+    'elif', 'else', 'for', 'in', 'to',
+    'step', 'while', 'func', 'return',
     'break', 'continue'
 }
 local Token = {}

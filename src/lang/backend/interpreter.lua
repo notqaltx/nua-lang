@@ -84,7 +84,7 @@ local interpret_methods = {
     end,
     visit_UnaryOpNode = function(self, node, context)
         local res, error = Results("RT"), nil
-        print("unary op node")
+        -- print("unary op node")
         local number = res:register(self:visit(node.node, context))
         if res.error then return res end
 
@@ -132,9 +132,17 @@ local interpret_methods = {
 
         local condition
         local i = start_value.value
-        if step_value.value > 0 then condition = function() return i < end_value.value end
-        else condition = function() return i > end_value.value end end
-
+        if step_value.value > 0 then
+            condition = function()
+                if node.inclusive then return i <= end_value.value
+                else return i < end_value.value end
+            end
+        else
+            condition = function()
+                if node.inclusive then return i >= end_value.value
+                else return i > end_value.value end
+            end
+        end
         while condition() do
             context.symbol_table:set(node.var_name_token.value, Values("Number", i))
             i = i + step_value.value

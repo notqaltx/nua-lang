@@ -101,12 +101,13 @@ local If = create_node("IfNode", function(_, cases, else_case)
 end)
 local For = create_node("ForNode", function(
     _, var_name_token, start_node,
-    end_node, step_node, body_node
+    end_node, step_node, body_node, inclusive
 ) return setmetatable({
         __name = "ForNode",
         var_name_token = var_name_token,
         start_node = start_node, end_node = end_node,
         step_node = step_node, body_node = body_node,
+        inclusive = inclusive or false,
         pos_start = var_name_token.pos_start,
         pos_end = body_node.pos_end
     }, { __index = For })
