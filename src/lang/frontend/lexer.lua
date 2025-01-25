@@ -15,6 +15,11 @@ local lexer_methods = {
             and self.source:sub(self.pos.idx + 1, self.pos.idx + 1) or nil
         return self.current_char
     end,
+    reverse = function(self)
+        self.pos.idx = self.pos.idx - 1
+        self.current_char = self.source:sub(self.pos.idx + 1, self.pos.idx + 1)
+        return self.current_char
+    end,
     char_match = function(self, expected)
         if self:is_at_end() then return false end
         local char = self.source:sub(self.pos.idx + 1, self.pos.idx + 1)
@@ -89,11 +94,23 @@ local lexer_methods = {
         end return self:add_token(token_type, start, self.pos)
     end,
     make_dot = function(self)
-        local token_type = TokenType.DOT
+        local token_type, new_token = nil, nil
         local start = self.pos:copy(); self:advance()
 
-        if self.current_char == "." then self:advance(); token_type = TokenType.DD
-        end return self:add_token(token_type, start, self.pos)
+        if self.current_char == "." then self:advance()
+            if self.current_char == "=" then self:advance();
+                new_token = self:add_token(TokenType.DDE, start, self.pos)
+            else new_token = self:add_token(TokenType.DD, start, self.pos) end
+            self:reverse()
+
+            if self:is_digit(self.current_char) then
+                local num_token, err = self:make_number()
+                if err then return nil, err end
+            end
+        else
+            new_token = self:add_token(TokenType.DOT, start, self.pos)
+        end 
+        return new_token
     end,
     make_string = function(self)
         local str, start = "", self.pos:copy()
@@ -199,7 +216,7 @@ local lexer_methods = {
             self:advance() -- Ignore whitespace
         elseif self.current_char == "//" then
             self:skip_comment() -- Skip Comment
-        elseif self.current_char == ";\n" then self:add_token(TokenType.NEWLINE, self.pos)
+        elseif self.current_char == "\n" then self:add_token(TokenType.NEWLINE, self.pos)
         elseif self.current_char == "\"" or self.current_char == "'" then
             local success, err = self:make_string()
             if not success then return nil, err end

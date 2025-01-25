@@ -19,6 +19,7 @@ local TokenType = {
     COMMA = 'COMMA',
     DOT = 'DOT',
     DD = 'DD',
+    DDE = 'DDE',
     SEMICOLON = 'SEMICOLON',
     COLON = 'COLON',
     BANG = 'BANG',

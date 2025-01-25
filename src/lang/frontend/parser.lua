@@ -156,21 +156,18 @@ local parse_methods = {
         if res.error then return res end
 
         local inclusive = false
-        if self.current_token.type ~= TokenType.DD then
+        if self.current_token.type == TokenType.DD then inclusive = false
+        elseif self.current_token.type == TokenType.DDE then inclusive = true
+        else
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"..\" after start value."
+                "Expected \"..\" or \"..=\" after start value in for loop"
             ))
         end
         res:register_advancement(); self:advance()
-        if self.current_token.type == TokenType.EQ then
-            res:register_advancement(); self:advance()
-            inclusive = true
-        end
         local end_node = res:register(self:expr())
         if res.error then return res end
 
-        local step_node = nil
         if self.current_token(TokenType.KEYWORD, "step") then
             res:register_advancement(); self:advance()
             step_node = res:register(self:expr())
@@ -186,11 +183,13 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
-        local body_node = res:register(self:expr())
+        body_node = res:register(self:expr())
         if res.error then return res end
 
         self:consume(TokenType.RBRACKET, "}", res)
         res:register_advancement(); self:advance()
+
+        print("inclusive", inclusive)
         return res:success(Nodes("ForNode", var_name_token, start_node,
             end_node, step_node, body_node, inclusive))
     end,
