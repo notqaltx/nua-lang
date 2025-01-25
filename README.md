@@ -5,7 +5,7 @@ trying to make it as fast as possible... -->
 <html>
     <div align="center">
         <a href="https://github.com/ntqltx/nua-lang">
-            <img src="src/img/nuathumbnail.png" alt="Nua Language Thumbnail" width="600">
+            <img src="src/img/nuathumbnail.png" alt="Nua Language Thumbnail" width="720">
         </a>
         <p></p>
         <p>
