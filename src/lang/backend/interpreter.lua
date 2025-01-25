@@ -149,6 +149,7 @@ local interpret_methods = {
             res:register(self:visit(node.body_node, context))
             if res.error then return res end
         end
+        context.symbol_table[node.var_name_token.value] = nil
         return res:success(Values("Number", 0))
     end,
     visit_WhileNode = function(self, node, context)

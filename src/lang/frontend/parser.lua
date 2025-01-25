@@ -142,10 +142,10 @@ local parse_methods = {
         local var_name_token = self.current_token
         res:register_advancement(); self:advance()
 
-        if self.current_token.type ~= TokenType.EQ then
+        if not self.current_token(TokenType.KEYWORD, "in") then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"=\" after identifier."
+                "Expected \"in\" after identifier."
             ))
         end
         res:register_advancement(); self:advance()
@@ -164,6 +164,9 @@ local parse_methods = {
         res:register_advancement(); self:advance()
         local end_node = res:register(self:expr())
         if res.error then return res end
+        
+        self:consume(TokenType.COMMA, ",", res)
+        res:register_advancement(); self:advance()
 
         local step_node = nil
         if self.current_token(TokenType.KEYWORD, "step") then
@@ -196,23 +199,9 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
-        if self.current_token.type ~= TokenType.LPAREN then
-            return res:failure(Errors("InvalidSyntaxError",
-                self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"(\" after \"while\"."
-            ))
-        end
-        res:register_advancement(); self:advance()
         local condition_node = res:register(self:expr())
         if res.error then return res end
 
-        if self.current_token.type ~= TokenType.RPAREN then
-            return res:failure(Errors("InvalidSyntaxError",
-                self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \")\" after condition body."
-            ))
-        end
-        res:register_advancement(); self:advance()
         if self.current_token.type ~= TokenType.LBRACKET then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
