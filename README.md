@@ -21,8 +21,8 @@ trying to make it as fast as possible... -->
     <p>Nua is designed to be simple language with a syntax similar to Lua + Rust.</p>
     <ul>
         <li>Variable declaration: <code>var x = 10</code></li>
-        <li>If statement: <code>if (x > 10) { true } else { false }</code></li>
-        <li>For statement: <code>for (i in 1..=10) { true }</code></li>
+        <li>If statement: <code>if (x >= 10) { true } elif (x < 10) { false } else { false }</code></li>
+        <li>For statement: <code>for (i in 1..=10) { var x = x * 1 }</code></li>
         <li>While statement: <code>while (x < 10) { var x = x + 1 }</code></li>
     </ul>
     <p>
