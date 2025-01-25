@@ -164,13 +164,17 @@ local parse_methods = {
         res:register_advancement(); self:advance()
         local end_node = res:register(self:expr())
         if res.error then return res end
-        
-        self:consume(TokenType.COMMA, ",", res)
-        res:register_advancement(); self:advance()
 
         local step_node = nil
-        if self.current_token(TokenType.KEYWORD, "step") then
+        if self.current_token.type == TokenType.COMMA then
             res:register_advancement(); self:advance()
+            if self.current_token.type ~= TokenType.INT
+            and self.current_token.type ~= TokenType.FLOAT then
+                return res:failure(Errors("InvalidSyntaxError",
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    "Expected number after comma in for loop step."
+                ))
+            end
             step_node = res:register(self:expr())
             if res.error then return res end
         end

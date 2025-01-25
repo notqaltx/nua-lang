@@ -22,7 +22,7 @@ trying to make it as fast as possible... -->
     <ul>
         <li>Variable declaration: <code>var x = 10</code></li>
         <li>If statement: <code>if (x >= 10 || x == 10) { true } elif (x < 10) { false } else { false }</code></li>
-        <li>For statement: <code>for i in 1..=10, step 1 { var x = x * i }</code></li>
+        <li>For statement: <code>for i in 1..=10, 1 { var x = x * i }</code></li>
         <li>While statement: <code>while x < 10 { var x = x + 1 }</code></li>
     </ul>
     <p>
