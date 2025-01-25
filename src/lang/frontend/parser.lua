@@ -24,18 +24,18 @@ local parse_methods = {
         else self.current_token = nil end
     end,
     consume = function(self, type, value, res)
-        if self.current_token.type ~= type and self.current_token.value ~= value then
-            return res:failure(Errors("InvalidSyntaxError",
+        if self.current_token.type ~= type then
+            local error = Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \""..value.."\" after \""..type.."\""
-            ))
+                "Expected \""..char.."\"")
+            return res:failure(error)
         end
+        return true
     end,
     parse = function(self)
         local res = self:expr()
         if res.error then return res end
         if self.current_token and self.current_token.type ~= TokenType.EOF then
-            print("parse error")
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
                 "Expected identifier, keyword, or expression."
@@ -56,6 +56,7 @@ local parse_methods = {
         end
         res:register_advancement(); self:advance()
         self:consume(TokenType.LPAREN, "(", res)
+        if res.error then return res end
 
         res:register_advancement(); self:advance()
         local condition = res:register(self:expr())
@@ -63,6 +64,7 @@ local parse_methods = {
 
         self:consume(TokenType.RPAREN, ")", res)
         res:register_advancement(); self:advance()
+        if res.error then return res end
 
         if self.current_token.type ~= TokenType.LBRACKET then
             return res:failure(Errors("InvalidSyntaxError",
@@ -76,8 +78,10 @@ local parse_methods = {
 
         cases[cases_count + 1] = {[1] = condition, [2] = then_body}
         cases_count = cases_count + 1
+
         self:consume(TokenType.RBRACKET, "}", res)
         res:register_advancement(); self:advance()
+        if res.error then return res end
 
         while self.current_token(TokenType.KEYWORD, "elif") do
             res:register_advancement(); self:advance()
@@ -104,6 +108,7 @@ local parse_methods = {
 
             self:consume(TokenType.RBRACKET, "}", res)
             res:register_advancement(); self:advance()
+            if res.error then return res end
         end
         if self.current_token(TokenType.KEYWORD, "else") then
             res:register_advancement(); self:advance()
@@ -120,6 +125,7 @@ local parse_methods = {
 
             self:consume(TokenType.RBRACKET, "}", res)
             res:register_advancement(); self:advance()
+            if res.error then return res end
         end
         return res:success(Nodes("IfNode", cases, else_case))
     end,
@@ -132,6 +138,8 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
+        if res.error then return res end
+
         if self.current_token.type ~= TokenType.IDENTIFIER then
             print("for_expr error")
             return res:failure(Errors("InvalidSyntaxError",
@@ -141,6 +149,7 @@ local parse_methods = {
         end
         local var_name_token = self.current_token
         res:register_advancement(); self:advance()
+        if res.error then return res end
 
         if not self.current_token(TokenType.KEYWORD, "in") then
             return res:failure(Errors("InvalidSyntaxError",
@@ -172,7 +181,7 @@ local parse_methods = {
             and self.current_token.type ~= TokenType.FLOAT then
                 return res:failure(Errors("InvalidSyntaxError",
                     self.current_token.pos_start, self.current_token.pos_end,
-                    "Expected number after comma in for loop step."
+                    "Unexpected token after comma in for loop step."
                 ))
             end
             step_node = res:register(self:expr())
@@ -190,6 +199,7 @@ local parse_methods = {
 
         self:consume(TokenType.RBRACKET, "}", res)
         res:register_advancement(); self:advance()
+        if res.error then return res end
 
         return res:success(Nodes("ForNode", var_name_token, start_node,
             end_node, step_node, body_node, inclusive))
@@ -218,6 +228,7 @@ local parse_methods = {
 
         self:consume(TokenType.RBRACKET, "}", res)
         res:register_advancement(); self:advance()
+        if res.error then return res end
         return res:success(Nodes("WhileNode", condition_node, body_node))
     end,
     atom = function(self)
@@ -225,12 +236,6 @@ local parse_methods = {
         if token.type == TokenType.INT or token.type == TokenType.FLOAT then
             res:register_advancement(); self:advance()
             return res:success(Nodes("NumberNode", token))
-
-        -- elseif token.type == TokenType.PLUS or token.type == TokenType.MINUS then
-        --     res:register_advancement(); self:advance()
-        --     local factor = res:register(self:factor())
-        --     if res.error then return res end
-        --     return res:success(Nodes("UnaryOpNode", token, factor))
 
         elseif token.type == TokenType.IDENTIFIER then
             res:register_advancement(); self:advance()
@@ -264,12 +269,13 @@ local parse_methods = {
             local while_expr = res:register(self:while_expr())
             if res.error then return res end
             return res:success(while_expr)
+
+        else
+            return res:failure(Errors("InvalidSyntaxError",
+                token.pos_start, token.pos_end,
+                "Unexpected token: \""..token.type.."\"."
+            ))
         end
-        print("atom error")
-        return res:failure(Errors("InvalidSyntaxError",
-            token.pos_start, token.pos_end,
-            "Expected identifier, keyword or expression."
-        ))
     end,
     power = function(self)
         return self:bin_op(self.atom, {TokenType.POW, }, self.factor)
@@ -285,10 +291,7 @@ local parse_methods = {
         if valid_tokens[token.type] then
             res:register_advancement(); self:advance()
             local factor = res:register(self:factor())
-            if res.error then
-                print("Error in factor:", res.error)
-                return res
-            end
+            if res.error then return res end
             return res:success(Nodes("UnaryOpNode", token, factor))
         end
         -- if token.type == TokenType.PLUS or token.type == TokenType.MINUS then
@@ -311,6 +314,7 @@ local parse_methods = {
         return self:bin_op(self.factor, {TokenType.MUL, TokenType.DIV})
     end,
     arith_expr = function(self)
+        print("arith_expr")
         return self:bin_op(self.term, {TokenType.PLUS, TokenType.MINUS})
     end,
     comp_expr = function(self)
@@ -326,13 +330,7 @@ local parse_methods = {
             TokenType.EE, TokenType.NE, TokenType.LT,
             TokenType.GT, TokenType.LTE, TokenType.GTE
         }))
-        if res.error then
-            print("comp_expr error")
-            return res:failure(Errors("InvalidSyntaxError",
-                self.current_token.pos_start, self.current_token.pos_end,
-                "Expected identifier, keyword or expression."
-            ))
-        end
+        if res.error then return res end
         return res:success(node)
     end,
     expr = function(self)
@@ -360,13 +358,12 @@ local parse_methods = {
             return res:success(Nodes("VarAssignNode", var_name, expr))
         end
         local node = res:register(self:bin_op(self.comp_expr, {TokenType.AND, TokenType.OR}))
-        if res.error then
-            print("expr error")
-            return res:failure(Errors("InvalidSyntaxError",
-                self.current_token.pos_start, self.current_token.pos_end,
-                "Expected identifier, keyword or expression."
-            ))
-        end
+        if res.error then return res end
+            -- return res:failure(Errors("InvalidSyntaxError",
+            --     self.current_token.pos_start, self.current_token.pos_end,
+            --     "Expected identifier, keyword or expression."
+            -- ))
+        -- end
         return res:success(node)
     end,
     bin_op = function(self, a, ops, b)

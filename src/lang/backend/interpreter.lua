@@ -84,7 +84,7 @@ local interpret_methods = {
     end,
     visit_UnaryOpNode = function(self, node, context)
         local res, error = Results("RT"), nil
-        -- print("unary op node")
+        print(node.op_token.type)
         local number = res:register(self:visit(node.node, context))
         if res.error then return res end
 

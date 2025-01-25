@@ -26,9 +26,11 @@ local lexer_methods = {
         if char ~= expected then return false end
         self:advance(); return true
     end,
-    peek = function(self)
+    peek = function(self, ahead)
+        ahead = ahead or 1
+        local peek_idx = self.pos.idx + ahead
         if self:is_at_end() then return '\0' end
-        return self.source:sub(self.pos.idx + 1, self.pos.idx + 1)
+        return self.source:sub(peek_idx, peek_idx)
     end,
     token = function(self, type, value, start, _end)
         local token = Token:new(type, value, start, _end)
@@ -74,9 +76,14 @@ local lexer_methods = {
     make_minus = function(self)
         local token_type = TokenType.MINUS
         local start = self.pos:copy(); self:advance()
+        local next_token = self.current_char
 
-        if self.current_char == ">" then self:advance(); token_type = TokenType.ARROW
-        end return self:add_token(token_type, start, self.pos)
+        if next_token == ">" then self:advance(); token_type = TokenType.ARROW
+        elseif self:is_digit(next_token) then
+            local num_token, err = self:make_number()
+            if err then return nil, err end
+        end
+        return self:add_token(token_type, start, self.pos)
     end,
     make_ampersand = function(self)
         local token_type = TokenType.AMPERSAND
@@ -137,17 +144,23 @@ local lexer_methods = {
     make_number = function(self)
         local start = self.pos:copy()
         local num_str, dot_count = "", 0
-    
-        while self.current_char ~= nil and (self:is_digit(self.current_char) or self.current_char == ".") do
-            if self.current_char == "." then
-                if self:peek() == "." then break end
-                if dot_count == 1 then break end
-                dot_count = dot_count + 1
-                num_str = num_str.."."
-            else
+
+        if self:peek(2) == "." and self:peek(3) == "." then
+            while self.current_char ~= nil and self:is_digit(self.current_char) do
                 num_str = num_str..self.current_char
+                self:advance()
             end
-            self:advance()
+        else
+            while self.current_char ~= nil and (self:is_digit(self.current_char) or self.current_char == ".") do
+                if self.current_char == "." then
+                    if dot_count == 1 then break end
+                    dot_count = dot_count + 1
+                    num_str = num_str.."."
+                else
+                    num_str = num_str..self.current_char
+                end
+                self:advance()
+            end
         end
         local tonum = tonumber(num_str)
         if dot_count == 0 then return self:token(TokenType.INT, tonum, start), nil
@@ -156,8 +169,6 @@ local lexer_methods = {
     make_identifier = function(self)
         local id_str, start = "", self.pos:copy()
         local new_tokens = Tokens.LETTERS_DIGITS
-        -- TODO: add here error handling
-        -- if not new_tokens then return end
 
         while self.current_char ~= nil and
             (string.find(new_tokens, self.current_char) or self.current_char == "_") do
