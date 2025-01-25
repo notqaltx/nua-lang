@@ -198,6 +198,7 @@ local lexer_methods = {
         elseif self.current_char == ":" then self:add_token(TokenType.COLON, self.pos)
         elseif self.current_char == ";" then self:add_token(TokenType.SEMICOLON, self.pos)
         elseif self.current_char == "*" then self:add_token(TokenType.MUL, self.pos)
+        elseif self.current_char == "/" then self:add_token(TokenType.DIV, self.pos)
         elseif self.current_char == "." then self:make_dot()
         elseif self.current_char == "=" then self:make_equals()
         elseif self.current_char == "<" then self:make_less_than()
@@ -208,13 +209,6 @@ local lexer_methods = {
         elseif self.current_char == "!" then
             local token, error = self:make_not_equals()
             if error then return {}, error end
-        elseif self.current_char == "/" then self:advance()
-            if self:char_match("/") then
-                while self:peek() ~= "\n"
-                and not self:is_at_end() do
-                    self:advance()
-                end
-            else self:add_token(TokenType.DIV, self.pos) end
         elseif (self.current_char == "" or self.current_char == " ")
         or (self.current_char == "\r" or self.current_char == "\t") then
             self:advance() -- Ignore whitespace
