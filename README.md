@@ -17,6 +17,7 @@ trying to make it as fast as possible... -->
     <div>&nbsp;</div>
     <h2>About Nua</h2>
     <p>Nua is a programming language, built just for fun with simplicity.</p>
+    <p>It would be fully written in Lua. (I hope so)</p>
     <h3>Language Design</h3>
     <p>Nua is designed to be simple language with a syntax similar to Lua + Rust.</p>
     <ul>
@@ -30,6 +31,14 @@ trying to make it as fast as possible... -->
         <ul>
             <li>Nua is still in development, everything is subject to change.</li>
             <li>Nua is not yet ready for production.</li>
+        </ul>
+    </p>
+    <p>
+        <b>Contributing:</b>
+        <ul>
+            <li>Contributions are welcome!</li>
+            <li>Keep in mind that I'm making this language just for fun. And I don't want to make it too complex or really big as a project.</li>
+            <li>Please read the <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> file for more information.</li>
         </ul>
     </p>
     <h2>License</h2>
