@@ -132,9 +132,6 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
-        self:consume(TokenType.LPAREN, "(", res)
-        res:register_advancement(); self:advance()
-
         if self.current_token.type ~= TokenType.IDENTIFIER then
             print("for_expr error")
             return res:failure(Errors("InvalidSyntaxError",
@@ -145,10 +142,10 @@ local parse_methods = {
         local var_name_token = self.current_token
         res:register_advancement(); self:advance()
 
-        if not self.current_token(TokenType.KEYWORD, "in") then
+        if self.current_token.type ~= TokenType.EQ then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"in\" after identifier."
+                "Expected \"=\" after identifier."
             ))
         end
         res:register_advancement(); self:advance()
@@ -161,21 +158,19 @@ local parse_methods = {
         else
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
-                "Expected \"..\" or \"..=\" after start value in for loop"
+                "Expected \"..\" or \"..=\" after start value in for loop."
             ))
         end
         res:register_advancement(); self:advance()
         local end_node = res:register(self:expr())
         if res.error then return res end
 
+        local step_node = nil
         if self.current_token(TokenType.KEYWORD, "step") then
             res:register_advancement(); self:advance()
             step_node = res:register(self:expr())
             if res.error then return res end
         end
-        self:consume(TokenType.RPAREN, ")", res)
-        res:register_advancement(); self:advance()
-
         if self.current_token.type ~= TokenType.LBRACKET then
             return res:failure(Errors("InvalidSyntaxError",
                 self.current_token.pos_start, self.current_token.pos_end,
@@ -183,13 +178,12 @@ local parse_methods = {
             ))
         end
         res:register_advancement(); self:advance()
-        body_node = res:register(self:expr())
+        local body_node = res:register(self:expr())
         if res.error then return res end
 
         self:consume(TokenType.RBRACKET, "}", res)
         res:register_advancement(); self:advance()
 
-        print("inclusive", inclusive)
         return res:success(Nodes("ForNode", var_name_token, start_node,
             end_node, step_node, body_node, inclusive))
     end,

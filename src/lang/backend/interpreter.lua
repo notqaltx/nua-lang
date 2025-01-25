@@ -144,7 +144,7 @@ local interpret_methods = {
             end
         end
         while condition() do
-            context.symbol_table:set(node.var_name_token.value, Values("Number", i))
+            context.symbol_table[node.var_name_token.value] = Values("Number", i)
             i = i + step_value.value
             res:register(self:visit(node.body_node, context))
             if res.error then return res end
