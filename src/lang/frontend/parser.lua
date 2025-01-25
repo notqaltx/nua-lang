@@ -177,11 +177,27 @@ local parse_methods = {
         local step_node = nil
         if self.current_token.type == TokenType.COMMA then
             res:register_advancement(); self:advance()
-            if self.current_token.type ~= TokenType.INT
+            -- if self.current_token.type ~= TokenType.INT
+            -- and self.current_token.type ~= TokenType.FLOAT then
+            --     return res:failure(Errors("InvalidSyntaxError",
+            --         self.current_token.pos_start, self.current_token.pos_end,
+            --         "Expected number after comma in for loop step."
+            --     ))
+            -- end
+            if self.current_token.type == TokenType.MINUS then
+                res:register_advancement(); self:advance()
+                if self.current_token.type ~= TokenType.INT
+                and self.current_token.type ~= TokenType.FLOAT then
+                    return res:failure(Errors("InvalidSyntaxError",
+                        self.current_token.pos_start, self.current_token.pos_end,
+                        "Expected number after minus sign in for loop step."
+                    ))
+                end
+            elseif self.current_token.type ~= TokenType.INT
             and self.current_token.type ~= TokenType.FLOAT then
                 return res:failure(Errors("InvalidSyntaxError",
                     self.current_token.pos_start, self.current_token.pos_end,
-                    "Unexpected token after comma in for loop step."
+                    "Expected number after comma in for loop step."
                 ))
             end
             step_node = res:register(self:expr())
