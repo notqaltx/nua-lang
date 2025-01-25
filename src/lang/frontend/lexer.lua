@@ -74,16 +74,10 @@ local lexer_methods = {
         end return self:add_token(token_type, start, self.pos)
     end,
     make_minus = function(self)
-        local token_type = TokenType.MINUS
-        local start = self.pos:copy(); self:advance()
-        local next_token = self.current_char
-
-        if next_token == ">" then self:advance(); token_type = TokenType.ARROW
-        elseif self:is_digit(next_token) then
-            local num_token, err = self:make_number()
-            if err then return nil, err end
-        end
-        return self:add_token(token_type, start, self.pos)
+        local token_type, start = TokenType.MINUS, self.pos:copy()
+        if self:peek() == ">" then self:advance();
+            return self:add_token(TokenType.ARROW, start, self.pos)
+        else return self:add_token(token_type, start, self.pos) end
     end,
     make_ampersand = function(self)
         local token_type = TokenType.AMPERSAND
@@ -214,8 +208,7 @@ local lexer_methods = {
         elseif self.current_char == "!" then
             local token, error = self:make_not_equals()
             if error then return {}, error end
-        elseif self.current_char == "/" then
-            self:advance()
+        elseif self.current_char == "/" then self:advance()
             if self:char_match("/") then
                 while self:peek() ~= "\n"
                 and not self:is_at_end() do
@@ -223,7 +216,7 @@ local lexer_methods = {
                 end
             else self:add_token(TokenType.DIV, self.pos) end
         elseif (self.current_char == "" or self.current_char == " ")
-        or (self.current_char == "\r" or self.current_char == " \t") then
+        or (self.current_char == "\r" or self.current_char == "\t") then
             self:advance() -- Ignore whitespace
         elseif self.current_char == "//" then
             self:skip_comment() -- Skip Comment

@@ -287,34 +287,18 @@ local parse_methods = {
                 nil, nil, "Unexpected end of input."
             ))
         end
-        local valid_tokens = {[TokenType.PLUS] = true, [TokenType.MINUS] = true}
-        if valid_tokens[token.type] then
+        if token.type == TokenType.PLUS or token.type == TokenType.MINUS then
             res:register_advancement(); self:advance()
             local factor = res:register(self:factor())
             if res.error then return res end
             return res:success(Nodes("UnaryOpNode", token, factor))
         end
-        -- if token.type == TokenType.PLUS or token.type == TokenType.MINUS then
-        --     res:register_advancement(); self:advance()
-        --     if self.current_token.type == TokenType.INT 
-        --     or self.current_token.type == TokenType.FLOAT then
-        --         local num_token = self.current_token
-        --         res:register_advancement(); self:advance()
-        --         return res:success(Nodes("UnaryOpNode", token, Nodes("NumberNode", num_token)))
-        --     else
-        --         return res:failure(Errors("InvalidSyntaxError",
-        --             self.current_token.pos_start, self.current_token.pos_end,
-        --             "Expected number after unary operator."
-        --         ))
-        --     end
-        -- end
         return self:power()
     end,
     term = function(self)
         return self:bin_op(self.factor, {TokenType.MUL, TokenType.DIV})
     end,
     arith_expr = function(self)
-        print("arith_expr")
         return self:bin_op(self.term, {TokenType.PLUS, TokenType.MINUS})
     end,
     comp_expr = function(self)
