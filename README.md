@@ -33,11 +33,22 @@ trying to make it as fast as possible... -->
             <li>Nua is not yet ready for production.</li>
         </ul>
     </p>
+    <h3>Upcoming Features</h3>
+    <p>
+        <ul>
+            <li>Functions</li>
+            <li>Strings, Lists, Maps</li>
+            <li>Generics</li>
+            <li>Type inference</li>
+            <li>Error handling</li>
+            <li>Standard library</li>
+        </ul>
+    </p>
     <p>
         <b>Contributing:</b>
         <ul>
             <li>Contributions are welcome!</li>
-            <li>Keep in mind that I'm making this language just for fun. And I don't want to make it too complex or really big as a project.</li>
+            <li>Keep in mind that, I'm making this language just for fun. And I don't want to make it really big as a project.</li>
             <li>Please read the <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> file for more information.</li>
         </ul>
     </p>
