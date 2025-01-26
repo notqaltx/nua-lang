@@ -48,7 +48,7 @@ trying to make it as fast as possible... -->
         <b>Contributing:</b>
         <ul>
             <li>Contributions are welcome!</li>
-            <li>Keep in mind that, I'm making this language just for fun. And I don't want to make it really big as a project.</li>
+            <li>Keep in mind that I'm making this language just for fun. And I don't want to make it really big as a project.</li>
             <li>Please read the <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> file for more information.</li>
         </ul>
     </p>
