@@ -43,7 +43,7 @@ local LETTERS_DIGITS = LETTERS..DIGITS
 local KEYWORDS = {
     'var', 'not', 'if', 'then',
     'elif', 'else', 'for', 'in', 'to',
-    'step', 'while', 'func', 'return',
+    'step', 'while', 'fn', 'return',
     'break', 'continue'
 }
 local Token = {}
